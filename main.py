@@ -13,120 +13,100 @@ if 'transaction_manager' not in st.session_state:
     st.session_state.transaction_manager = TransactionManager()
 if 'analytics' not in st.session_state:
     st.session_state.analytics = Analytics()
-if 'scan_state' not in st.session_state:
-    st.session_state.scan_state = 'initial'  # States: initial, folder_selection, processing
-if 'current_transaction' not in st.session_state:
-    st.session_state.current_transaction = {}
+if 'show_folder_options' not in st.session_state:
+    st.session_state.show_folder_options = False
 
 def main():
-    st.title("PhonePe Scanner Simulation")
+    # Set page config to match PhonePe style
+    st.set_page_config(page_title="PhonePe Scanner", layout="wide")
 
-    # Simplified navigation - focusing on scanner experience
-    show_scanner_page()
+    # Custom CSS to match PhonePe style
+    st.markdown("""
+        <style>
+        .stButton button {
+            background-color: #6739B7;
+            color: white;
+            border-radius: 20px;
+        }
+        .folder-icon {
+            font-size: 24px;
+            color: #6739B7;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-def show_scanner_page():
-    if st.session_state.scan_state == 'initial':
-        show_initial_scan()
-    elif st.session_state.scan_state == 'folder_selection':
-        show_folder_selection()
-    elif st.session_state.scan_state == 'processing':
-        process_transaction()
+    show_scanner_interface()
 
-def show_initial_scan():
-    st.header("UPI Scanner")
+def show_scanner_interface():
+    # Top Bar
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.title("Scan & Pay")
 
-    # Simulate QR code scanning
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        merchant = st.text_input("Merchant UPI ID")
+    # Scanner View
+    scanner_container = st.container()
+    with scanner_container:
+        st.markdown("""
+            <div style='background-color: #000; padding: 20px; border-radius: 10px; text-align: center;'>
+                <p style='color: white;'>Camera Viewfinder</p>
+                <p style='color: #6739B7;'>Position QR code in frame</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Folder Feature Toggle (similar to PhonePe's flash toggle)
+        col1, col2 = st.columns([4,1])
+        with col2:
+            if st.button("📁", help="Enable/Disable Folder Feature"):
+                st.session_state.show_folder_options = not st.session_state.show_folder_options
+
+    # Show folder options if enabled
+    if st.session_state.show_folder_options:
+        with st.container():
+            st.markdown("### 📁 Select Folder")
+
+            # Create new folder option
+            if st.button("➕ Create New Folder"):
+                folder_name = st.text_input("Enter folder name")
+                if folder_name:
+                    st.session_state.folder_manager.create_folder(folder_name)
+                    st.success(f"Created folder: {folder_name}")
+
+            # Select existing folder
+            folders = st.session_state.folder_manager.get_folders()
+            selected_folder = st.selectbox(
+                "Choose folder for this payment",
+                folders,
+                help="Transaction will be saved in this folder"
+            )
+
+    # Simulate payment process
+    with st.container():
+        # Mock payment fields (normally these would come from QR scan)
+        merchant = st.text_input("Merchant UPI ID (Simulated QR data)")
         amount = st.number_input("Amount", min_value=0.0, step=0.01)
 
-    # Proceed button
-    if st.button("Scan QR Code"):
-        if merchant and amount > 0:
-            st.session_state.current_transaction = {
-                'merchant': merchant,
-                'amount': amount,
-                'timestamp': datetime.now()
-            }
-            st.session_state.scan_state = 'folder_selection'
-            st.experimental_rerun()
-        else:
-            st.error("Please enter merchant details and amount")
+        if st.button("Pay Now", use_container_width=True):
+            if amount > 0 and merchant:
+                # Create transaction
+                transaction = {
+                    'merchant': merchant,
+                    'amount': amount,
+                    'timestamp': datetime.now(),
+                    'folder': selected_folder if st.session_state.show_folder_options else 'Default',
+                    'notes': ''
+                }
 
-def show_folder_selection():
-    st.header("Select Folder")
+                # Save transaction
+                st.session_state.transaction_manager.add_transaction(transaction)
 
-    # Display transaction details
-    st.info(f"Payment to: {st.session_state.current_transaction['merchant']}")
-    st.info(f"Amount: ₹{st.session_state.current_transaction['amount']:.2f}")
+                # Success message
+                st.success("🎉 Payment Successful!")
+                st.balloons()
 
-    # Create new folder option
-    with st.expander("➕ Create New Folder"):
-        with st.form("new_folder"):
-            new_folder = st.text_input("Folder Name")
-            if st.form_submit_button("Create"):
-                if new_folder:
-                    st.session_state.folder_manager.create_folder(new_folder)
-                    st.success(f"Created folder: {new_folder}")
-                    st.experimental_rerun()
-
-    # Select folder
-    folders = st.session_state.folder_manager.get_folders()
-    selected_folder = st.selectbox("Select Folder", folders, help="Choose a folder to categorize this transaction")
-
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("← Back"):
-            st.session_state.scan_state = 'initial'
-            st.experimental_rerun()
-    with col2:
-        if st.button("Pay") and selected_folder:
-            st.session_state.current_transaction['folder'] = selected_folder
-            st.session_state.scan_state = 'processing'
-            st.experimental_rerun()
-
-def process_transaction():
-    st.header("Processing Payment")
-
-    # Add notes if needed
-    notes = st.text_input("Add notes (optional)")
-    st.session_state.current_transaction['notes'] = notes
-
-    # Process the payment
-    if st.button("Confirm Payment"):
-        # Save transaction
-        st.session_state.transaction_manager.add_transaction(st.session_state.current_transaction)
-
-        # Show success message
-        st.success("Payment Successful!")
-        st.balloons()
-
-        # Show folder details
-        st.info(f"Transaction recorded in folder: {st.session_state.current_transaction['folder']}")
-
-        # Option to view transaction history
-        if st.button("View Transactions"):
-            show_history_page()
-        else:
-            # Reset for next transaction
-            st.session_state.scan_state = 'initial'
-            st.session_state.current_transaction = {}
-            st.experimental_rerun()
-
-def show_history_page():
-    st.header("Transaction History")
-
-    # Filter by folder
-    folders = st.session_state.folder_manager.get_folders()
-    selected_folder = st.selectbox("Select Folder to View", folders)
-
-    if selected_folder:
-        transactions = st.session_state.transaction_manager.get_folder_transactions(selected_folder)
-        if not transactions.empty:
-            st.dataframe(transactions)
-        else:
-            st.info(f"No transactions in folder: {selected_folder}")
+                if st.session_state.show_folder_options:
+                    st.info(f"Transaction saved in folder: {selected_folder}")
+            else:
+                st.error("Please enter valid payment details")
 
 if __name__ == "__main__":
     main()
