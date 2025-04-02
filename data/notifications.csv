@@ -1,1 +1,2 @@
 timestamp,type,message,read
+2025-04-02 14:03:49.137861,limit_exceeded,"⚠️ Spending limit exceeded for 'sigaret'! You have spent ₹1150.00, which is above your ₹500.00 limit.",True

@@ -28,32 +28,78 @@ class Analytics:
             print(f"Error getting folder transactions: {str(e)}")
             return pd.DataFrame(columns=['folder', 'merchant', 'amount', 'timestamp', 'notes'])
     
-    def generate_analytics(self, date_range):
-        """Generate analytics for the given date range"""
+    def generate_analytics(self, date_range=None):
+        """Generate analytics for the given date range
+        
+        Args:
+            date_range: Optional tuple of (start_date, end_date). If None, uses all data.
+        
+        Returns:
+            dict with spending data by folder and spending trends
+        """
         try:
             transactions = pd.read_csv(self.transactions_file)
+            if transactions.empty:
+                return {
+                    'spending_by_folder': pd.DataFrame(columns=['folder', 'amount', 'percentage']),
+                    'spending_trend': pd.DataFrame(columns=['date', 'amount']),
+                    'total_spending': 0.0
+                }
+                
             transactions['timestamp'] = pd.to_datetime(transactions['timestamp'])
             transactions['date'] = transactions['timestamp'].dt.date
             
-            # Filter by date range
-            mask = (transactions['date'] >= date_range[0]) & (transactions['date'] <= date_range[1])
-            filtered_transactions = transactions[mask]
+            # Filter by date range if provided
+            if date_range:
+                mask = (transactions['date'] >= date_range[0]) & (transactions['date'] <= date_range[1])
+                filtered_transactions = transactions[mask]
+            else:
+                filtered_transactions = transactions
+            
+            # Calculate total spending
+            total_spending = filtered_transactions['amount'].sum()
             
             # Spending by folder
             spending_by_folder = filtered_transactions.groupby('folder')['amount'].sum().reset_index()
             
-            # Spending trend
+            # Add percentage column
+            if total_spending > 0:
+                spending_by_folder['percentage'] = (spending_by_folder['amount'] / total_spending) * 100
+            else:
+                spending_by_folder['percentage'] = 0
+            
+            # Sort by amount descending
+            spending_by_folder = spending_by_folder.sort_values('amount', ascending=False)
+            
+            # Spending trend over time
             spending_trend = filtered_transactions.groupby('date')['amount'].sum().reset_index()
+            spending_trend = spending_trend.sort_values('date')
+            
+            # Daily spending average
+            if len(spending_trend) > 0:
+                daily_avg = total_spending / len(spending_trend)
+            else:
+                daily_avg = 0
+                
+            # Folder count by transaction volume
+            folder_count = filtered_transactions.groupby('folder').size().reset_index(name='count')
+            folder_count = folder_count.sort_values('count', ascending=False)
             
             return {
                 'spending_by_folder': spending_by_folder,
-                'spending_trend': spending_trend
+                'spending_trend': spending_trend,
+                'total_spending': total_spending,
+                'daily_avg': daily_avg,
+                'folder_count': folder_count
             }
         except Exception as e:
             print(f"Error generating analytics: {str(e)}")
             return {
-                'spending_by_folder': None,
-                'spending_trend': None
+                'spending_by_folder': pd.DataFrame(columns=['folder', 'amount', 'percentage']),
+                'spending_trend': pd.DataFrame(columns=['date', 'amount']),
+                'total_spending': 0.0,
+                'daily_avg': 0.0,
+                'folder_count': pd.DataFrame(columns=['folder', 'count'])
             }
     
     def get_current_month_spending(self, folder=None):

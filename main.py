@@ -152,9 +152,9 @@ def main():
     
     # Navigation options
     if unread_count > 0:
-        nav_options = ["Scan & Pay", "Transaction History", f"Notifications 🔔 ({unread_count})"]
+        nav_options = ["Scan & Pay", "Transaction History", f"Notifications 🔔 ({unread_count})", "Spending Analytics 📊"]
     else:
-        nav_options = ["Scan & Pay", "Transaction History", "Notifications 🔔"]
+        nav_options = ["Scan & Pay", "Transaction History", "Notifications 🔔", "Spending Analytics 📊"]
         
     selected_option = st.sidebar.radio("Navigation", nav_options)
     
@@ -163,6 +163,8 @@ def main():
         st.session_state.current_view = "scanner"
     elif "Notifications" in selected_option:
         st.session_state.current_view = "notifications"
+    elif "Spending Analytics" in selected_option:
+        st.session_state.current_view = "analytics"
     else:
         st.session_state.current_view = "history"
     
@@ -171,6 +173,8 @@ def main():
         show_scanner_interface()
     elif st.session_state.current_view == "notifications":
         show_notifications()
+    elif st.session_state.current_view == "analytics":
+        show_spending_analytics()
     else:
         show_transaction_history()
 
@@ -625,6 +629,228 @@ def show_transaction_history():
                                 st.info("No spending limit set (0 = unlimited)")
                         else:
                             st.error("Failed to update spending limit!")
+
+def show_spending_analytics():
+    """Display spending analytics with pie charts and graphs showing category-wise spending"""
+    # Page title
+    st.title("Spending Analytics")
+    
+    # PhonePe-like header
+    st.markdown("""
+        <div class="phonepe-header">
+            📊 Spending Insights
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Get all folders for filter
+    folders = st.session_state.folder_manager.get_folders()
+    if not folders:
+        folders = ['Default']
+        
+    # Add "All Folders" option at the beginning
+    filter_options = ["All Folders"] + folders
+    
+    # Date range filter
+    st.markdown("""
+        <div style="background-color: white; padding: 15px; border-radius: 10px; margin: 20px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h3 style="color: #6739B7; margin-bottom: 10px;">Customize Your View</h3>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Create filter section
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Multi-select folders
+        selected_folders = st.multiselect(
+            "Select folders to analyze:", 
+            folders,
+            default=folders[0] if folders else None,
+            placeholder="Choose folders..."
+        )
+    
+    with col2:
+        # Time period filter (simplified)
+        time_period = st.selectbox(
+            "Select time period:", 
+            ["All Time", "Current Month", "Last Month", "Last 3 Months"],
+            index=0,
+        )
+    
+    # Error message if no folders are selected
+    if not selected_folders:
+        st.warning("Please select at least one folder to view analytics.")
+        return
+    
+    # Get analytics data
+    analytics_data = st.session_state.analytics.generate_analytics()
+    
+    # Extract spending data by folder
+    spending_by_folder = analytics_data['spending_by_folder']
+    
+    # Filter by selected folders if not "All Folders"
+    if selected_folders:
+        spending_by_folder = spending_by_folder[spending_by_folder['folder'].isin(selected_folders)]
+        
+    if spending_by_folder.empty:
+        st.info("No transaction data available for the selected folders.")
+        return
+    
+    # Display total spending info
+    total_spending = spending_by_folder['amount'].sum()
+    
+    st.markdown(f"""
+        <div style="background-color: #f0f0f0; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center;">
+            <h2 style="color: #6739B7; margin-bottom: 10px;">Total Spending: ₹{total_spending:.2f}</h2>
+            <p>Across {len(selected_folders)} folders</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Create tabs for different visualizations
+    tab1, tab2, tab3 = st.tabs(["📈 Pie Chart", "📊 Bar Chart", "🔍 Detailed Breakdown"])
+    
+    with tab1:
+        st.markdown("<h3 style='text-align: center; color: #6739B7;'>Spending Distribution by Folder</h3>", unsafe_allow_html=True)
+        
+        # Create a pie chart showing distribution of spending across folders
+        spending_pie = px.pie(
+            spending_by_folder, 
+            values='amount', 
+            names='folder',
+            title='Spending Distribution by Folder',
+            hover_data=['percentage'],
+            labels={'amount': 'Amount (₹)', 'folder': 'Folder', 'percentage': 'Percentage (%)'},
+            color_discrete_sequence=px.colors.qualitative.Bold,
+        )
+        
+        # Customize the pie chart
+        spending_pie.update_traces(
+            textposition='inside',
+            textinfo='percent+label',
+            hovertemplate='<b>%{label}</b><br>Amount: ₹%{value:.2f}<br>Percentage: %{customdata[0]:.1f}%'
+        )
+        
+        # Set the theme and layout
+        spending_pie.update_layout(
+            legend_title_text='Folders',
+            legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
+            margin=dict(t=60, b=120, l=40, r=40),
+            height=500,
+        )
+        
+        # Display the pie chart
+        st.plotly_chart(spending_pie, use_container_width=True)
+        
+        # Display legend with exact amounts and percentages
+        st.markdown("<h4 style='text-align: center; color: #333;'>Detailed Distribution</h4>", unsafe_allow_html=True)
+        
+        # Create a formatted table to show exact figures
+        for _, row in spending_by_folder.iterrows():
+            folder = row['folder']
+            amount = row['amount']
+            percentage = row['percentage']
+            
+            st.markdown(f"""
+                <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;">
+                    <div style="font-weight: bold;">📁 {folder}</div>
+                    <div>₹{amount:.2f} ({percentage:.1f}%)</div>
+                </div>
+            """, unsafe_allow_html=True)
+    
+    with tab2:
+        st.markdown("<h3 style='text-align: center; color: #6739B7;'>Spending by Folder (Bar Chart)</h3>", unsafe_allow_html=True)
+        
+        # Create a bar chart
+        spending_bar = px.bar(
+            spending_by_folder.sort_values('amount', ascending=False), 
+            x='folder', 
+            y='amount',
+            title='Spending by Folder',
+            labels={'amount': 'Amount (₹)', 'folder': 'Folder'},
+            color='amount',
+            color_continuous_scale='Viridis',
+            text='amount'
+        )
+        
+        # Customize the bar chart
+        spending_bar.update_traces(
+            texttemplate='₹%{text:.2f}',
+            textposition='outside'
+        )
+        
+        # Set the theme and layout
+        spending_bar.update_layout(
+            xaxis_title='Folder',
+            yaxis_title='Amount (₹)',
+            height=500,
+            margin=dict(t=60, b=120, l=40, r=40),
+        )
+        
+        # Display the bar chart
+        st.plotly_chart(spending_bar, use_container_width=True)
+    
+    with tab3:
+        st.markdown("<h3 style='text-align: center; color: #6739B7;'>Detailed Spending Analysis</h3>", unsafe_allow_html=True)
+        
+        # Get transactions for selected folders
+        transactions = pd.DataFrame()
+        for folder in selected_folders:
+            folder_transactions = st.session_state.analytics.get_folder_transactions(folder)
+            transactions = pd.concat([transactions, folder_transactions], ignore_index=True)
+        
+        if not transactions.empty:
+            # Sort by date (newest first)
+            transactions['timestamp'] = pd.to_datetime(transactions['timestamp'])
+            transactions = transactions.sort_values('timestamp', ascending=False)
+            
+            # Format amounts
+            transactions['formatted_amount'] = transactions['amount'].apply(lambda x: f"₹{x:.2f}")
+            transactions['formatted_date'] = transactions['timestamp'].dt.strftime('%d %b %Y, %I:%M %p')
+            
+            # Group transactions by folder and merchant
+            merchant_spending = transactions.groupby(['folder', 'merchant'])['amount'].sum().reset_index()
+            merchant_spending = merchant_spending.sort_values(['folder', 'amount'], ascending=[True, False])
+            
+            # Display top merchants per folder
+            for folder in selected_folders:
+                folder_merchants = merchant_spending[merchant_spending['folder'] == folder]
+                
+                if not folder_merchants.empty:
+                    st.markdown(f"""
+                        <div style="background-color: #e9e0ff; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                            <h4 style="margin-top: 0; color: #6739B7;">📁 {folder} - Top Merchants</h4>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Create a horizontal bar chart for merchants
+                    merchant_bar = px.bar(
+                        folder_merchants.head(5),
+                        x='amount',
+                        y='merchant',
+                        orientation='h',
+                        labels={'amount': 'Amount (₹)', 'merchant': 'Merchant'},
+                        color='amount',
+                        color_continuous_scale='Viridis',
+                        text='amount'
+                    )
+                    
+                    # Customize the merchant bar chart
+                    merchant_bar.update_traces(
+                        texttemplate='₹%{text:.2f}',
+                        textposition='outside'
+                    )
+                    
+                    # Set the theme and layout
+                    merchant_bar.update_layout(
+                        height=300,
+                        margin=dict(t=20, b=20, l=20, r=20),
+                        yaxis=dict(autorange="reversed")
+                    )
+                    
+                    # Display the merchant bar chart
+                    st.plotly_chart(merchant_bar, use_container_width=True)
+        else:
+            st.info("No transaction data available for the selected folders.")
 
 def show_notifications():
     """Display notifications page with alerts and spending limit messages"""
