@@ -446,33 +446,46 @@ def show_scanner_interface():
         
         # Camera viewfinder with QR frame
         if not st.session_state.qr_scanned:
+            # Add scanning animation style to the head
             st.markdown("""
-                <div class="scanner-overlay">
-                    <!-- Animated scanner line effect -->
-                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, #6739B7, transparent); animation: scan 1.5s linear infinite; z-index: 10;"></div>
+                <style>
+                    @keyframes scanline {
+                        0% { transform: translateY(0); opacity: 0.8; }
+                        50% { opacity: 1; }
+                        100% { transform: translateY(300px); opacity: 0.8; }
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Scanner overlay with frame
+            st.markdown("""
+                <div style="position: relative; background-color: rgba(0, 0, 0, 0.9); padding: 30px; 
+                      border-radius: 15px; text-align: center; height: 300px; display: flex; 
+                      flex-direction: column; justify-content: center; align-items: center; margin-bottom: 20px;">
                     
-                    <div class="scanner-frame" style="position: relative; border: 2px solid rgba(103,57,183,0.8); box-shadow: 0 0 10px rgba(103,57,183,0.5);">
+                    <!-- Scanner line animation -->
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; 
+                         background: linear-gradient(to right, transparent, #6739B7, transparent); 
+                         animation: scanline 1.5s linear infinite; z-index: 10;"></div>
+                    
+                    <!-- Scanner frame -->
+                    <div style="border: 2px solid #6739B7; border-radius: 10px; padding: 5px;
+                         width: 80%; height: 60%; margin: 0 auto; display: flex;
+                         justify-content: center; align-items: center;">
                         <p style='color: #6739B7; font-weight: 500;'>Position QR code in frame</p>
                     </div>
                     
-                    <p style='color: #e0e0e0; margin-top: 15px; font-size: 14px;'>Camera active - waiting for QR code...</p>
+                    <p style='color: #e0e0e0; margin-top: 15px; font-size: 14px;'>
+                        Camera active - waiting for QR code...
+                    </p>
                     
-                    <!-- Visual scanner elements -->
-                    <div style="position: absolute; top: 10px; left: 10px; width: 30px; height: 30px; border-top: 2px solid #6739B7; border-left: 2px solid #6739B7; border-radius: 5px 0 0 0;"></div>
-                    <div style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-top: 2px solid #6739B7; border-right: 2px solid #6739B7; border-radius: 0 5px 0 0;"></div>
-                    <div style="position: absolute; bottom: 10px; left: 10px; width: 30px; height: 30px; border-bottom: 2px solid #6739B7; border-left: 2px solid #6739B7; border-radius: 0 0 0 5px;"></div>
-                    <div style="position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px; border-bottom: 2px solid #6739B7; border-right: 2px solid #6739B7; border-radius: 0 0 5px 0;"></div>
-                    
-                    <div class="folder-toggle" style="box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.2s;">📁</div>
+                    <!-- Folder toggle button -->
+                    <div style="position: absolute; bottom: 20px; right: 20px; background-color: rgba(103, 57, 183, 0.8);
+                         color: white; border-radius: 50%; width: 40px; height: 40px; display: flex;
+                         justify-content: center; align-items: center; cursor: pointer; font-size: 18px;">
+                        📁
+                    </div>
                 </div>
-                
-                <style>
-                    @keyframes scan {
-                        0% { transform: translateY(0); opacity: 0.8; }
-                        50% { opacity: 1; }
-                        100% { transform: translateY(320px); opacity: 0.8; }
-                    }
-                </style>
             """, unsafe_allow_html=True)
             
             # Add a scan button to simulate QR scanning
@@ -690,30 +703,45 @@ def show_scanner_interface():
                             A notification has been sent to your phone.
                             """)
                     
-                    # Success message with enhanced PhonePe style
-                    st.markdown("""
-                        <div style="position: relative; background: linear-gradient(135deg, #e8fff1 0%, #eefff5 100%); 
-                             padding: 25px 20px; border-radius: 12px; margin-top: 20px; text-align: center; 
-                             box-shadow: 0 4px 15px rgba(40,167,69,0.1); overflow: hidden; border: 1px solid #c8e6c9;">
+                    # Success message with enhanced PhonePe style - simplified
+                    transaction_id = f"PHONEPE{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    
+                    st.markdown(f"""
+                        <div style="background-color: #eefff5; padding: 20px; border-radius: 12px; 
+                             margin-top: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+                             border-left: 4px solid #28a745;">
                             
-                            <!-- Success animation (simulated) -->
-                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(to right, #28a745, #5cb85c, #28a745);"></div>
-                            
-                            <!-- Success icon with animation effect -->
-                            <div style="width: 70px; height: 70px; border-radius: 50%; background-color: rgba(40,167,69,0.1);
-                                 display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
-                                <span style="color: #28a745; font-size: 35px;">✓</span>
+                            <!-- Simple success icon -->
+                            <div style="margin: 10px auto 20px auto;">
+                                <span style="color: #28a745; font-size: 60px;">✓</span>
                             </div>
                             
-                            <h2 style="color: #28a745; margin-bottom: 10px; font-weight: 600;">Payment Successful!</h2>
+                            <h2 style="color: #28a745; margin-bottom: 15px; font-weight: 600;">Payment Successful!</h2>
                             
-                            <div style="background-color: white; border-radius: 8px; padding: 15px; margin: 15px 0; text-align: left; border: 1px solid #e0f2e9;">
-                                <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Transaction ID</div>
-                                <div style="font-size: 16px; font-family: monospace; color: #333; word-break: break-all;">PHONEPE{datetime.now().strftime('%Y%m%d%H%M%S')}</div>
+                            <!-- Transaction details card -->
+                            <div style="background-color: white; border-radius: 8px; padding: 15px; 
+                                 margin: 15px 0; text-align: left; border: 1px solid #e0f2e9;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="font-size: 14px; color: #555;">Amount:</span>
+                                    <span style="font-weight: 600; color: #333;">₹{amount:.2f}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="font-size: 14px; color: #555;">Date:</span>
+                                    <span style="color: #333;">{datetime.now().strftime('%d %b %Y, %I:%M %p')}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span style="font-size: 14px; color: #555;">To:</span>
+                                    <span style="color: #333;">{merchant}</span>
+                                </div>
+                                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e0e0e0;">
+                                    <div style="font-size: 13px; color: #666; margin-bottom: 5px;">Transaction ID</div>
+                                    <div style="font-size: 14px; font-family: monospace; color: #333;">{transaction_id}</div>
+                                </div>
                             </div>
                             
+                            <!-- Confirmation message -->
                             <p style="font-size: 14px; color: #666; margin-top: 15px;">
-                                A confirmation has been sent to your registered mobile number
+                                Payment details saved successfully!
                             </p>
                         </div>
                     """, unsafe_allow_html=True)
