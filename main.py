@@ -436,22 +436,29 @@ def main():
     
     /* Make the buttons cleaner and text more visible */
     button[data-testid="baseButton-secondary"] {
-        background-color: transparent !important;
-        color: #333333 !important; /* Darker text color for better visibility */
-        border: none !important;
-        box-shadow: none !important;
-        font-size: 13px !important; /* Slightly larger font */
+        background-color: #f0f0f0 !important; /* Light gray background for contrast */
+        color: #000000 !important; /* Black text color for maximum visibility */
+        border: 1px solid #dddddd !important; /* Light border for definition */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important; /* Subtle shadow for depth */
+        font-size: 14px !important; /* Larger font */
         padding: 5px 8px !important;
-        font-weight: 600 !important; /* Semi-bold text for better visibility */
+        font-weight: 700 !important; /* Bold text for better visibility */
         min-height: auto !important;
         text-align: center !important;
         white-space: pre-wrap !important;
+        line-height: 1.5 !important; /* Better line spacing */
+        text-shadow: 0px 0px 1px rgba(255,255,255,0.7) !important; /* Subtle text shadow for legibility */
+        border-radius: 4px !important; /* Rounded corners */
     }
     
     /* Highlight active button */
     .nav-{st.session_state.current_view} button {
-        color: #6739B7 !important;
-        font-weight: bold !important;
+        background-color: #6739B7 !important;
+        color: white !important;
+        font-weight: 800 !important;
+        text-shadow: 0px 0px 2px rgba(0,0,0,0.3) !important;
+        box-shadow: 0 2px 5px rgba(103,57,183,0.5) !important;
+        transform: translateY(-2px) !important;
     }
     
     /* Add spacing at bottom of page to prevent nav overlapping content */
