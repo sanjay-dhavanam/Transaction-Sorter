@@ -48,11 +48,19 @@ def simulate_qr_scan():
 
 def main():
     # Set page config to match PhonePe style
-    st.set_page_config(page_title="PhonePe Scanner", layout="wide")
+    st.set_page_config(page_title="PhonePe", page_icon="📱", layout="centered")
 
-    # Custom CSS to match PhonePe style
+    # Custom CSS to match PhonePe mobile app style
     st.markdown("""
         <style>
+        /* Base Styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        /* Button Styling */
         .stButton button {
             background-color: #6739B7;
             color: white;
@@ -60,24 +68,44 @@ def main():
             border: none;
             padding: 10px 20px;
             font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(103,57,183,0.3);
+            transition: all 0.2s ease;
         }
-        .folder-icon {
-            font-size: 24px;
-            color: #6739B7;
+        
+        .stButton button:hover {
+            background-color: #5c33a4;
+            box-shadow: 0 4px 8px rgba(103,57,183,0.4);
         }
+        
+        /* Mobile Container */
+        .mobile-container {
+            max-width: 480px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+        
+        /* Headers */
         .phonepe-header {
             background-color: #6739B7;
             color: white;
-            padding: 10px 0;
+            padding: 15px 0;
             text-align: center;
             border-radius: 10px 10px 0 0;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        
+        /* Scanner UI */
         .scanner-overlay {
             position: relative;
-            background-color: #000;
+            background-color: rgba(0, 0, 0, 0.9);
             padding: 30px;
             border-radius: 10px;
             text-align: center;
@@ -86,6 +114,23 @@ def main():
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        /* Mobile Status Bar */
+        .status-bar {
+            background-color: #6739B7;
+            color: white;
+            padding: 5px 15px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Icon Styling */
+        .folder-icon {
+            font-size: 24px;
+            color: #6739B7;
         }
         .scanner-frame {
             border: 2px solid #6739B7;
@@ -144,8 +189,21 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    # Navigation menu
-    st.sidebar.title("PhonePe")
+    # Mobile Phone Status Bar (simulated)
+    st.markdown("""
+        <div class="status-bar">
+            <span>📶 5G</span>
+            <span>⚡ 85%</span>
+            <span>⌚ 10:45 AM</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # PhonePe App Header
+    st.markdown("""
+        <div style="text-align: center; padding: 10px 0;">
+            <h1 style="color: #6739B7; margin: 0; font-size: 28px;">Phone<span style="color: #3483FA;">Pe</span></h1>
+        </div>
+    """, unsafe_allow_html=True)
     
     # Get unread notifications count
     unread_count = st.session_state.notification_manager.get_unread_count()
@@ -155,8 +213,40 @@ def main():
         nav_options = ["Scan & Pay", "Transaction History", f"Notifications 🔔 ({unread_count})", "Spending Analytics 📊"]
     else:
         nav_options = ["Scan & Pay", "Transaction History", "Notifications 🔔", "Spending Analytics 📊"]
-        
-    selected_option = st.sidebar.radio("Navigation", nav_options)
+    
+    # Mobile App Style Navigation with icons
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        scan_btn = st.button("📷\nScan & Pay", key="nav_scan", use_container_width=True)
+        if scan_btn:
+            st.session_state.current_view = "scanner"
+            st.rerun()
+            
+    with col2:
+        history_btn = st.button("📋\nHistory", key="nav_history", use_container_width=True)
+        if history_btn:
+            st.session_state.current_view = "history"
+            st.rerun()
+            
+    with col3:
+        notif_label = f"🔔\n({unread_count})" if unread_count > 0 else "🔔\nNotify"
+        notif_btn = st.button(notif_label, key="nav_notif", use_container_width=True)
+        if notif_btn:
+            st.session_state.current_view = "notifications"
+            st.rerun()
+            
+    with col4:
+        analytics_btn = st.button("📊\nAnalytics", key="nav_analytics", use_container_width=True)
+        if analytics_btn:
+            st.session_state.current_view = "analytics"
+            st.rerun()
+    
+    # Divider
+    st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
+    
+    # Keep a hidden navigation for accessibility
+    selected_option = st.sidebar.radio("Navigation", nav_options, label_visibility="collapsed")
     
     # Update current view based on selection
     if selected_option == "Scan & Pay":
