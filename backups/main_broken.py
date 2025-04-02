@@ -368,105 +368,45 @@ def main():
         .stTabs {
             background-color: transparent;
         }
-        
-        /* Hide radio buttons we use for navigation state */
-        div[data-testid="stRadio"] {
-            position: absolute !important;
-            top: -9999px !important;
-            left: -9999px !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-            display: none !important;
-        }
         </style>
     """, unsafe_allow_html=True)
     
-    # Add JavaScript to add IDs to radio buttons for easier click targeting
-    st.markdown("""
-    <script>
-    // Wait for the DOM to fully load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Find the radio buttons and add IDs to them
-        var radioButtons = document.querySelectorAll('div[data-testid="stRadio"] input');
-        if (radioButtons && radioButtons.length >= 4) {
-            radioButtons[0].id = 'radio-scanner';
-            radioButtons[1].id = 'radio-history';
-            radioButtons[2].id = 'radio-notifications';
-            radioButtons[3].id = 'radio-analytics';
-        }
-    });
-    </script>
-    """, unsafe_allow_html=True)
+    # Create tabs with icons
+    scan_tab = "📷\nScan & Pay"
+    history_tab = "📋\nHistory"
+    notifications_tab = "🔔\nNotify"
+    analytics_tab = "📊\nAnalytics"
     
-    # Initialize tab navigation in session state if not present
-    if 'tab_index' not in st.session_state:
-        st.session_state.tab_index = 0
+    # Create the actual tabs
+    tabs = st.tabs([scan_tab, history_tab, notifications_tab, analytics_tab])
     
-    # Create button-based navigation that looks like PhonePe's bottom nav bar
-    st.markdown("""
-    <div style="display: flex; justify-content: space-around; background-color: white; 
-    border-radius: 10px; margin-top: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding: 10px 0;">
-        <div id="nav-scanner" class="nav-item" onclick="document.getElementById('radio-scanner').click()">
-            <div style="font-size: 24px;">📷</div>
-            <div>Scan</div>
-        </div>
-        <div id="nav-history" class="nav-item" onclick="document.getElementById('radio-history').click()">
-            <div style="font-size: 24px;">📋</div>
-            <div>History</div>
-        </div>
-        <div id="nav-notifications" class="nav-item" onclick="document.getElementById('radio-notifications').click()">
-            <div style="font-size: 24px;">🔔</div>
-            <div>Notify</div>
-        </div>
-        <div id="nav-analytics" class="nav-item" onclick="document.getElementById('radio-analytics').click()">
-            <div style="font-size: 24px;">📊</div>
-            <div>Analytics</div>
-        </div>
-    </div>
+    # Get the selected tab and use it to determine which page to show
+    # For tabs, we need to handle the selection manually 
+    selected_tab_index = 0  # Default to first tab (Scan & Pay)
     
-    <style>
-    .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 8px 16px;
-        cursor: pointer;
-        border-radius: 8px;
-        transition: all 0.2s;
-        color: #888;
-    }
-    .nav-item:hover {
-        background-color: rgba(103, 57, 183, 0.1);
-        color: #6739B7;
-    }
-    #nav-{st.session_state.current_view} {
-        color: #6739B7;
-        font-weight: bold;
-        background-color: rgba(103, 57, 183, 0.1);
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Check which tab is clicked - we'll manually track this
+    with tabs[0]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "scanner":
+            st.session_state.current_view = "scanner"
+            
+    with tabs[1]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "history":
+            st.session_state.current_view = "history"
+            
+    with tabs[2]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "notifications":
+            st.session_state.current_view = "notifications"
+            
+    with tabs[3]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "analytics":
+            st.session_state.current_view = "analytics"
     
-    # Create radio buttons hidden from view that control the navigation
-    # This ensures the app properly maintains state between reruns
-    selected_tab = st.radio("Navigation", options=["scanner", "history", "notifications", "analytics"], 
-                           index=st.session_state.tab_index, 
-                           horizontal=True, 
-                           label_visibility="collapsed",
-                           key="navigation")
-    
-    # Update the current view based on the selected tab
-    st.session_state.current_view = selected_tab
-    
-    # Update tab_index for consistent tab highlighting
-    if selected_tab == "scanner":
-        st.session_state.tab_index = 0
-    elif selected_tab == "history":
-        st.session_state.tab_index = 1
-    elif selected_tab == "notifications":
-        st.session_state.tab_index = 2
-    elif selected_tab == "analytics":
-        st.session_state.tab_index = 3
+    # We don't need this section anymore as we're directly updating the current_view
+    # in each tab's context above
     
     # Divider
     st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
