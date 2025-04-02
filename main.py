@@ -1490,90 +1490,89 @@ def show_notifications():
     
     # Switch back to the Notifications tab
     with tab1:
-    
-    # Mark all as read button
-    if not notifications.empty:
-        if st.button("📖 Mark all as read", key="mark_all_read"):
-            st.session_state.notification_manager.mark_all_as_read()
-            st.success("All notifications marked as read!")
-            st.rerun()
-    
-    # Display notifications
-    if not notifications.empty:
-        # Format the timestamp
-        notifications['formatted_date'] = pd.to_datetime(notifications['timestamp']).dt.strftime('%d %b %Y, %I:%M %p')
+        # Mark all as read button
+        if not notifications.empty:
+            if st.button("📖 Mark all as read", key="mark_all_read"):
+                st.session_state.notification_manager.mark_all_as_read()
+                st.success("All notifications marked as read!")
+                st.rerun()
         
-        # Create a container for notifications
-        st.markdown("""
-            <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Your Notifications</h3>
-            </div>
-        """, unsafe_allow_html=True)
+        # Display notifications
+        if not notifications.empty:
+            # Format the timestamp
+            notifications['formatted_date'] = pd.to_datetime(notifications['timestamp']).dt.strftime('%d %b %Y, %I:%M %p')
+            
+            # Create a container for notifications
+            st.markdown("""
+                <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Your Notifications</h3>
+                </div>
+            """, unsafe_allow_html=True)
         
-        # Display individual notifications
-        for i, notification in notifications.iterrows():
-            # Different styling based on notification type
-            if notification['type'] == 'limit_exceeded':
-                icon = "⚠️"
-                color = "#dc3545"  # Red
-                bg_color = "#fff5f5"
-                border = "4px solid #dc3545"
-            else:
-                icon = "ℹ️"
-                color = "#6739B7"  # PhonePe Purple
-                bg_color = "#f9f9f9"
-                border = "4px solid #6739B7"
-            
-            # Read/unread status
-            read_status = "Read" if notification['read'] else "Unread"
-            read_color = "#6c757d" if notification['read'] else "#28a745"
-            
-            with st.container():
-                st.markdown(f"""
-                    <div style="border-left: {border}; padding: 15px; margin: 10px 0; background-color: {bg_color}; border-radius: 5px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4 style="margin: 0; color: {color};">{icon} {notification['type'].replace('_', ' ').title()}</h4>
-                            <p style="margin: 0; color: {read_color}; font-size: 14px;">{read_status}</p>
-                        </div>
-                        <p style="margin: 10px 0; color: #333; font-size: 16px;">{notification['message']}</p>
-                        <p style="margin: 5px 0 0; color: #666; font-size: 14px;">{notification['formatted_date']}</p>
-                    </div>
-                """, unsafe_allow_html=True)
+            # Display individual notifications
+            for i, notification in notifications.iterrows():
+                # Different styling based on notification type
+                if notification['type'] == 'limit_exceeded':
+                    icon = "⚠️"
+                    color = "#dc3545"  # Red
+                    bg_color = "#fff5f5"
+                    border = "4px solid #dc3545"
+                else:
+                    icon = "ℹ️"
+                    color = "#6739B7"  # PhonePe Purple
+                    bg_color = "#f9f9f9"
+                    border = "4px solid #6739B7"
                 
-                # Mark as read button for unread notifications
-                if not notification['read']:
-                    if st.button("Mark as read", key=f"read_{i}"):
-                        st.session_state.notification_manager.mark_as_read(i)
-                        st.success(f"Notification marked as read!")
-                        st.rerun()
-    else:
-        # No notifications
+                # Read/unread status
+                read_status = "Read" if notification['read'] else "Unread"
+                read_color = "#6c757d" if notification['read'] else "#28a745"
+                
+                with st.container():
+                    st.markdown(f"""
+                        <div style="border-left: {border}; padding: 15px; margin: 10px 0; background-color: {bg_color}; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; color: {color};">{icon} {notification['type'].replace('_', ' ').title()}</h4>
+                                <p style="margin: 0; color: {read_color}; font-size: 14px;">{read_status}</p>
+                            </div>
+                            <p style="margin: 10px 0; color: #333; font-size: 16px;">{notification['message']}</p>
+                            <p style="margin: 5px 0 0; color: #666; font-size: 14px;">{notification['formatted_date']}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Mark as read button for unread notifications
+                    if not notification['read']:
+                        if st.button("Mark as read", key=f"read_{i}"):
+                            st.session_state.notification_manager.mark_as_read(i)
+                            st.success(f"Notification marked as read!")
+                            st.rerun()
+        else:
+            # No notifications
+            st.markdown("""
+                <div style="background-color: #f8f8f8; padding: 30px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                    <h3 style="color: #6739B7; margin-bottom: 10px;">No Notifications</h3>
+                    <p>You don't have any notifications at the moment.</p>
+                    <p>You'll receive notifications here when you exceed your spending limits.</p>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        # Simulated phone notification section
         st.markdown("""
-            <div style="background-color: #f8f8f8; padding: 30px; border-radius: 10px; text-align: center; margin-top: 20px;">
-                <h3 style="color: #6739B7; margin-bottom: 10px;">No Notifications</h3>
-                <p>You don't have any notifications at the moment.</p>
-                <p>You'll receive notifications here when you exceed your spending limits.</p>
+            <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Phone Notification Settings</h3>
             </div>
         """, unsafe_allow_html=True)
         
-    # Simulated phone notification section
-    st.markdown("""
-        <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-            <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Phone Notification Settings</h3>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Phone notification settings
-    st.markdown("""
-        <div style="background-color: #f8f8f8; padding: 15px; border-radius: 10px; margin: 15px 0;">
-            <p style="margin: 0 0 10px 0; font-weight: bold;">You'll receive push notifications on your phone when:</p>
-            <ul style="margin: 0; padding-left: 20px;">
-                <li>You exceed your folder spending limits</li>
-                <li>A folder is nearing its spending limit (80% or higher)</li>
-                <li>Your monthly spending patterns change significantly</li>
-            </ul>
-        </div>
-    """, unsafe_allow_html=True)
+        # Phone notification settings
+        st.markdown("""
+            <div style="background-color: #f8f8f8; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                <p style="margin: 0 0 10px 0; font-weight: bold;">You'll receive push notifications on your phone when:</p>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li>You exceed your folder spending limits</li>
+                    <li>A folder is nearing its spending limit (80% or higher)</li>
+                    <li>Your monthly spending patterns change significantly</li>
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
