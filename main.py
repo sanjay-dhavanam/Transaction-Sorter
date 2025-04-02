@@ -17,6 +17,29 @@ if 'show_folder_options' not in st.session_state:
     st.session_state.show_folder_options = False
 if 'selected_folder' not in st.session_state:
     st.session_state.selected_folder = 'Default'
+if 'qr_scanned' not in st.session_state:
+    st.session_state.qr_scanned = False
+if 'merchant_data' not in st.session_state:
+    st.session_state.merchant_data = {
+        'upi_id': '',
+        'name': '',
+        'amount': 0.0
+    }
+    
+# Function to simulate QR scan
+def simulate_qr_scan():
+    """Simulate scanning a QR code and extracting data"""
+    # In a real app, this would parse QR code data
+    import random
+    merchants = [
+        {"upi_id": "amazon@upi", "name": "Amazon Shopping", "amount": random.randint(500, 2000)},
+        {"upi_id": "flipkart@upi", "name": "Flipkart", "amount": random.randint(200, 1500)},
+        {"upi_id": "grocerystore@upi", "name": "Local Grocery Store", "amount": random.randint(100, 800)},
+        {"upi_id": "restaurant@upi", "name": "Food Junction", "amount": random.randint(300, 1200)},
+        {"upi_id": "utility@upi", "name": "Electric Bill Payment", "amount": random.randint(500, 3000)}
+    ]
+    selected = random.choice(merchants)
+    return selected
 
 def main():
     # Set page config to match PhonePe style
@@ -135,15 +158,45 @@ def show_scanner_interface():
         """, unsafe_allow_html=True)
         
         # Camera viewfinder with QR frame
-        st.markdown("""
-            <div class="scanner-overlay">
-                <div class="scanner-frame">
-                    <p style='color: #6739B7;'>Position QR code in frame</p>
+        if not st.session_state.qr_scanned:
+            st.markdown("""
+                <div class="scanner-overlay">
+                    <div class="scanner-frame">
+                        <p style='color: #6739B7;'>Position QR code in frame</p>
+                    </div>
+                    <p style='color: white; margin-top: 15px;'>Waiting for QR code...</p>
+                    <div class="folder-toggle">📁</div>
                 </div>
-                <p style='color: white; margin-top: 15px;'>Waiting for QR code...</p>
-                <div class="folder-toggle">📁</div>
-            </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            
+            # Add a scan button to simulate QR scanning
+            scan_col1, scan_col2, scan_col3 = st.columns([1,1,1])
+            with scan_col2:
+                if st.button("📷 Scan QR Code", use_container_width=True):
+                    # Simulate scanning and get merchant data
+                    merchant_data = simulate_qr_scan()
+                    st.session_state.merchant_data = merchant_data
+                    st.session_state.qr_scanned = True
+                    st.rerun()
+        else:
+            # Show detected QR result
+            st.markdown(f"""
+                <div style="background-color: #e9e0ff; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: #6739B7; margin-bottom: 10px;">✅ QR Code Detected!</h3>
+                    <p style="font-size: 18px; color: #333;">
+                        <strong>Merchant:</strong> {st.session_state.merchant_data['name']}<br>
+                        <strong>UPI ID:</strong> {st.session_state.merchant_data['upi_id']}<br>
+                        <strong>Amount:</strong> ₹{st.session_state.merchant_data['amount']:.2f}
+                    </p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Add a Reset button to scan another QR
+            reset_col1, reset_col2, reset_col3 = st.columns([1,1,1])
+            with reset_col2:
+                if st.button("🔄 Scan Another QR", use_container_width=True):
+                    st.session_state.qr_scanned = False
+                    st.rerun()
         
         # Folder Feature Toggle - Making it more visible
         col1, col2, col3 = st.columns([3,1,1])
@@ -242,14 +295,31 @@ def show_scanner_interface():
         # Payment columns for a cleaner look
         col1, col2 = st.columns(2)
         
+        # Auto-populate from QR code if scanned
         with col1:
-            merchant = st.text_input("👤 Merchant UPI ID", 
-                                    placeholder="merchant@upi")
+            if st.session_state.qr_scanned:
+                merchant_name = st.session_state.merchant_data['name']
+                merchant_upi = st.session_state.merchant_data['upi_id']
+                merchant = st.text_input("👤 Merchant", 
+                                       value=merchant_upi,
+                                       help=f"Merchant Name: {merchant_name}")
+            else:
+                merchant = st.text_input("👤 Merchant UPI ID", 
+                                       placeholder="Scan QR code or enter manually")
         
         with col2:
-            amount = st.number_input("💰 Amount (₹)", 
-                                    min_value=0.0, step=10.0,
-                                    format="%.2f")
+            if st.session_state.qr_scanned:
+                default_amount = st.session_state.merchant_data['amount']
+                amount = st.number_input("💰 Amount (₹)", 
+                                       value=float(default_amount),
+                                       min_value=0.0, 
+                                       step=10.0,
+                                       format="%.2f")
+            else:
+                amount = st.number_input("💰 Amount (₹)", 
+                                       min_value=0.0, 
+                                       step=10.0,
+                                       format="%.2f")
         
         # Optional note
         note = st.text_input("✏️ Add a note (optional)", 
