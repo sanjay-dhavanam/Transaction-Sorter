@@ -165,19 +165,48 @@ def show_scanner_interface():
                 </div>
             """, unsafe_allow_html=True)
             
-            # Create new folder in a visually appealing way
+            # Create new folder functionality
             col1, col2 = st.columns([1, 3])
             with col1:
                 create_folder = st.button("➕ New Folder", use_container_width=True)
             
+            # Initialize the input state
+            if 'new_folder_name' not in st.session_state:
+                st.session_state.new_folder_name = ""
+            if 'show_folder_input' not in st.session_state:
+                st.session_state.show_folder_input = False
+                
+            # Toggle the folder input form when button is clicked
             if create_folder:
-                with st.form(key="new_folder_form"):
-                    folder_name = st.text_input("Enter folder name")
-                    submit_button = st.form_submit_button("Create")
+                st.session_state.show_folder_input = True
+            
+            # Show the folder creation form when needed
+            if st.session_state.show_folder_input:
+                with st.container():
+                    st.markdown("<div style='background-color: #e9e0ff; padding: 15px; border-radius: 10px; margin-top: 10px;'>", unsafe_allow_html=True)
                     
-                    if submit_button and folder_name:
-                        st.session_state.folder_manager.create_folder(folder_name)
-                        st.success(f"Created folder: {folder_name}")
+                    new_folder_name = st.text_input("Enter new folder name:", key="folder_name_input")
+                    
+                    col1, col2, col3 = st.columns([1,1,1])
+                    with col1:
+                        if st.button("Create Folder"):
+                            if new_folder_name:
+                                success = st.session_state.folder_manager.create_folder(new_folder_name)
+                                if success:
+                                    st.success(f"Folder '{new_folder_name}' created successfully!")
+                                    # Update selected folder to the newly created one
+                                    st.session_state.selected_folder = new_folder_name
+                                    st.session_state.show_folder_input = False
+                                else:
+                                    st.warning(f"Folder '{new_folder_name}' already exists!")
+                            else:
+                                st.error("Please enter a folder name!")
+                                
+                    with col3:
+                        if st.button("Cancel"):
+                            st.session_state.show_folder_input = False
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
             
             # Get existing folders
             folders = st.session_state.folder_manager.get_folders()
