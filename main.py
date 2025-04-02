@@ -354,19 +354,24 @@ def main():
         </script>
     """, unsafe_allow_html=True)
     
-    # Functional navigation buttons (hidden with CSS instead of label_visibility)
+    # Make navigation buttons visible and centered
     st.markdown("""
         <style>
-        /* Hide the navigation buttons text but keep them functional */
+        /* Style navigation buttons to match the design */
         [data-testid="stHorizontalBlock"] [data-testid="baseButton-secondary"] {
-            color: transparent;
-            min-height: 10px;
-            height: 10px;
-            padding: 0;
+            background-color: transparent;
+            color: #6739B7;
+            min-height: 40px;
+            font-size: 24px;
+            padding: 10px 0;
             margin: 0;
-            opacity: 0;
-            position: absolute;
-            top: -50px;
+            box-shadow: none;
+            border: none;
+            text-align: center;
+        }
+        [data-testid="stHorizontalBlock"] [data-testid="baseButton-secondary"]:hover {
+            background-color: rgba(103, 57, 183, 0.1);
+            box-shadow: none;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -374,25 +379,32 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        scan_btn = st.button("", key="nav_scan", use_container_width=True)
+        scan_btn = st.button("📷", key="nav_scan", use_container_width=True)
         if scan_btn:
             st.session_state.current_view = "scanner"
             st.rerun()
+        st.markdown("<div style='text-align:center; font-size:12px;'>Scan & Pay</div>", unsafe_allow_html=True)
             
     with col2:
-        history_btn = st.button("", key="nav_history", use_container_width=True)
+        history_btn = st.button("📋", key="nav_history", use_container_width=True)
         if history_btn:
             st.session_state.current_view = "history"
             st.rerun()
+        st.markdown("<div style='text-align:center; font-size:12px;'>History</div>", unsafe_allow_html=True)
             
     with col3:
-        notif_btn = st.button("", key="nav_notif", use_container_width=True)
+        notif_btn = st.button("🔔", key="nav_notif", use_container_width=True)
         if notif_btn:
             st.session_state.current_view = "notifications"
             st.rerun()
+        st.markdown("<div style='text-align:center; font-size:12px;'>Notify</div>", unsafe_allow_html=True)
             
     with col4:
-        analytics_btn = st.button("", key="nav_analytics", use_container_width=True)
+        analytics_btn = st.button("📊", key="nav_analytics", use_container_width=True)
+        if analytics_btn:
+            st.session_state.current_view = "analytics"
+            st.rerun()
+        st.markdown("<div style='text-align:center; font-size:12px;'>Analytics</div>", unsafe_allow_html=True)
     
     # Divider
     st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
