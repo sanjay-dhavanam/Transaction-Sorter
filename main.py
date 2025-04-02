@@ -793,48 +793,54 @@ def show_scanner_interface():
                             A notification has been sent to your phone.
                             """)
                     
-                    # Success message with enhanced PhonePe style - simplified
+                    # Generate transaction ID with current timestamp
                     transaction_id = f"PHONEPE{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     
-                    st.markdown(f"""
-                        <div style="background-color: #eefff5; padding: 20px; border-radius: 12px; 
-                             margin-top: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-                             border-left: 4px solid #28a745;">
+                    # PhonePe-style success screen with clean design
+                    st.success("✅ Payment Successful!")
+                    
+                    # Transaction details container
+                    st.markdown(
+                        f"""
+                        <div style="background-color: white; border-radius: 10px; padding: 20px; 
+                             box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 20px; margin-bottom: 20px;">
+                            <h2 style="color: #6739B7; text-align: center; margin-bottom: 15px;">
+                                ₹{amount:.2f}
+                            </h2>
                             
-                            <!-- Simple success icon -->
-                            <div style="margin: 10px auto 20px auto;">
-                                <span style="color: #28a745; font-size: 60px;">✓</span>
+                            <div style="padding: 10px; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">
+                                <table style="width: 100%;">
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Transaction ID</td>
+                                        <td style="padding: 8px 0; color: #333; font-weight: 500; text-align: right;">{transaction_id}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Date & Time</td>
+                                        <td style="padding: 8px 0; color: #333; text-align: right;">{datetime.now().strftime('%d %b, %I:%M %p')}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Paid to</td>
+                                        <td style="padding: 8px 0; color: #333; text-align: right;">{merchant}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Folder</td>
+                                        <td style="padding: 8px 0; color: #6739B7; font-weight: 500; text-align: right;">
+                                            📁 {transaction['folder']}
+                                        </td>
+                                    </tr>
+                                    {f'<tr><td style="padding: 8px 0; color: #555; font-size: 14px;">Note</td><td style="padding: 8px 0; color: #333; text-align: right;">{note}</td></tr>' if note else ''}
+                                </table>
                             </div>
                             
-                            <h2 style="color: #28a745; margin-bottom: 15px; font-weight: 600;">Payment Successful!</h2>
-                            
-                            <!-- Transaction details card -->
-                            <div style="background-color: white; border-radius: 8px; padding: 15px; 
-                                 margin: 15px 0; text-align: left; border: 1px solid #e0f2e9;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                    <span style="font-size: 14px; color: #555;">Amount:</span>
-                                    <span style="font-weight: 600; color: #333;">₹{amount:.2f}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                    <span style="font-size: 14px; color: #555;">Date:</span>
-                                    <span style="color: #333;">{datetime.now().strftime('%d %b %Y, %I:%M %p')}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                    <span style="font-size: 14px; color: #555;">To:</span>
-                                    <span style="color: #333;">{merchant}</span>
-                                </div>
-                                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #e0e0e0;">
-                                    <div style="font-size: 13px; color: #666; margin-bottom: 5px;">Transaction ID</div>
-                                    <div style="font-size: 14px; font-family: monospace; color: #333;">{transaction_id}</div>
-                                </div>
+                            <div style="background-color: #e9f7ef; border-radius: 8px; padding: 12px; text-align: center;">
+                                <p style="margin: 0; color: #28a745; font-weight: 500;">
+                                    Transaction completed successfully!
+                                </p>
                             </div>
-                            
-                            <!-- Confirmation message -->
-                            <p style="font-size: 14px; color: #666; margin-top: 15px;">
-                                Payment details saved successfully!
-                            </p>
                         </div>
-                    """, unsafe_allow_html=True)
+                        """, 
+                        unsafe_allow_html=True
+                    )
                     
                     if st.session_state.show_folder_options:
                         st.markdown(f"""
