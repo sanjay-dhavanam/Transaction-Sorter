@@ -6,6 +6,7 @@ from utils.folder_manager import FolderManager
 from utils.transaction_manager import TransactionManager
 from utils.analytics import Analytics
 from utils.notification_manager import NotificationManager
+from utils.sms_sender import SMSSender
 
 # Initialize session state
 if 'folder_manager' not in st.session_state:
@@ -16,6 +17,10 @@ if 'analytics' not in st.session_state:
     st.session_state.analytics = Analytics()
 if 'notification_manager' not in st.session_state:
     st.session_state.notification_manager = NotificationManager()
+if 'sms_sender' not in st.session_state:
+    st.session_state.sms_sender = SMSSender()
+if 'user_phone' not in st.session_state:
+    st.session_state.user_phone = ""  # Will be set in settings
 if 'show_folder_options' not in st.session_state:
     st.session_state.show_folder_options = False
 if 'selected_folder' not in st.session_state:
@@ -429,15 +434,15 @@ def main():
         padding: 5px 0;
     }
     
-    /* Make the buttons cleaner */
+    /* Make the buttons cleaner and text more visible */
     button[data-testid="baseButton-secondary"] {
         background-color: transparent !important;
-        color: #666 !important;
+        color: #333333 !important; /* Darker text color for better visibility */
         border: none !important;
         box-shadow: none !important;
-        font-size: 12px !important;
+        font-size: 13px !important; /* Slightly larger font */
         padding: 5px 8px !important;
-        font-weight: normal !important;
+        font-weight: 600 !important; /* Semi-bold text for better visibility */
         min-height: auto !important;
         text-align: center !important;
         white-space: pre-wrap !important;
@@ -786,6 +791,18 @@ def show_scanner_interface():
                                 limit_info['limit']
                             )
                             
+                            # Send SMS notification if phone number is set
+                            if st.session_state.user_phone:
+                                sms_result = st.session_state.sms_sender.send_limit_exceeded_notification(
+                                    st.session_state.user_phone,
+                                    folder_name,
+                                    limit_info['current'],
+                                    limit_info['limit']
+                                )
+                                
+                                if not sms_result['success'] and "not configured" not in sms_result['message']:
+                                    st.error(f"Failed to send SMS notification: {sms_result['message']}")
+                            
                             # Show warning in UI
                             st.warning(f"""
                             ⚠️ SPENDING LIMIT EXCEEDED for folder '{folder_name}'!
@@ -796,51 +813,128 @@ def show_scanner_interface():
                     # Generate transaction ID with current timestamp
                     transaction_id = f"PHONEPE{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     
-                    # PhonePe-style success screen with clean design
-                    st.success("✅ Payment Successful!")
+                    # PhonePe-style success screen with animations
                     
-                    # Transaction details container
-                    st.markdown(
-                        f"""
-                        <div style="background-color: white; border-radius: 10px; padding: 20px; 
-                             box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 20px; margin-bottom: 20px;">
-                            <h2 style="color: #6739B7; text-align: center; margin-bottom: 15px;">
-                                ₹{amount:.2f}
-                            </h2>
-                            
-                            <div style="padding: 10px; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">
-                                <table style="width: 100%;">
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Transaction ID</td>
-                                        <td style="padding: 8px 0; color: #333; font-weight: 500; text-align: right;">{transaction_id}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Date & Time</td>
-                                        <td style="padding: 8px 0; color: #333; text-align: right;">{datetime.now().strftime('%d %b, %I:%M %p')}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Paid to</td>
-                                        <td style="padding: 8px 0; color: #333; text-align: right;">{merchant}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #555; font-size: 14px;">Folder</td>
-                                        <td style="padding: 8px 0; color: #6739B7; font-weight: 500; text-align: right;">
-                                            📁 {transaction['folder']}
-                                        </td>
-                                    </tr>
-                                    {f'<tr><td style="padding: 8px 0; color: #555; font-size: 14px;">Note</td><td style="padding: 8px 0; color: #333; text-align: right;">{note}</td></tr>' if note else ''}
-                                </table>
-                            </div>
-                            
-                            <div style="background-color: #e9f7ef; border-radius: 8px; padding: 12px; text-align: center;">
-                                <p style="margin: 0; color: #28a745; font-weight: 500;">
-                                    Transaction completed successfully!
-                                </p>
-                            </div>
+                    # Add CSS animations and success message
+                    st.markdown("""
+                    <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    
+                    @keyframes checkmark {
+                        0% { transform: scale(0); opacity: 0; }
+                        50% { transform: scale(1.2); }
+                        100% { transform: scale(1); opacity: 1; }
+                    }
+                    
+                    @keyframes rotating {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                    
+                    .payment-success-block {
+                        animation: fadeIn 0.5s ease-out forwards;
+                    }
+                    
+                    .checkmark-circle {
+                        width: 60px;
+                        height: 60px;
+                        background-color: #28a745;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 15px auto;
+                        animation: checkmark 0.5s ease-out forwards;
+                    }
+                    
+                    .celebration-dot {
+                        position: absolute;
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 50%;
+                        animation: fadeIn 0.3s ease-out forwards, rotating 8s linear infinite;
+                    }
+                    </style>
+                    
+                    <div class="payment-success-block" style="position: relative; background: linear-gradient(135deg, #f5fffa 0%, #e1f5fe 100%); padding: 25px; border-radius: 15px; text-align: center; margin: 15px 0; border: 1px solid #d4edda;">
+                        <div class="checkmark-circle">
+                            <span style="color: white; font-size: 30px;">✓</span>
                         </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
+                        
+                        <h2 style="color: #28a745; margin-bottom: 5px; font-weight: 600;">
+                            Payment Successful!
+                        </h2>
+                        
+                        <p style="color: #555; margin-bottom: 20px;">
+                            Your transaction has been completed
+                        </p>
+                        
+                        <!-- Celebration dots - like confetti -->
+                        <div class="celebration-dot" style="top: 20px; left: 20px; background-color: #6739B7;"></div>
+                        <div class="celebration-dot" style="top: 40px; right: 30px; background-color: #FFC107; animation-delay: 0.1s;"></div>
+                        <div class="celebration-dot" style="top: 80px; left: 50px; background-color: #FF5722; animation-delay: 0.2s;"></div>
+                        <div class="celebration-dot" style="top: 30px; right: 50px; background-color: #2196F3; animation-delay: 0.3s;"></div>
+                        <div class="celebration-dot" style="top: 70px; left: 80px; background-color: #6739B7; animation-delay: 0.4s;"></div>
+                        <div class="celebration-dot" style="top: 50px; right: 80px; background-color: #4CAF50; animation-delay: 0.5s;"></div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Transaction amount display with animation
+                    st.markdown(f"""
+                    <div style="background-color: white; border-radius: 10px; padding: 20px; 
+                         box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 10px; margin-bottom: 20px; animation: fadeIn 0.6s ease-out forwards; animation-delay: 0.2s; opacity: 0;">
+                        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                            <div style="width: 40px; height: 40px; background-color: rgba(103, 57, 183, 0.1); 
+                                 border-radius: 50%; display: flex; align-items: center; 
+                                 justify-content: center; margin-right: 15px;">
+                                <span style="color: #6739B7; font-size: 18px;">₹</span>
+                            </div>
+                            <h2 style="color: #333; margin: 0; font-weight: 600; font-size: 28px;">
+                                {amount:.2f}
+                            </h2>
+                        </div>
+                        
+                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">
+                            <table style="width: 100%;">
+                                <tr>
+                                    <td style="padding: 8px 0; color: #555; font-size: 14px;">Transaction ID</td>
+                                    <td style="padding: 8px 0; color: #333; font-weight: 500; text-align: right;">{transaction_id}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #555; font-size: 14px;">Date & Time</td>
+                                    <td style="padding: 8px 0; color: #333; text-align: right;">{datetime.now().strftime('%d %b, %I:%M %p')}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #555; font-size: 14px;">Paid to</td>
+                                    <td style="padding: 8px 0; color: #333; text-align: right;">{merchant}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #555; font-size: 14px;">Folder</td>
+                                    <td style="padding: 8px 0; color: #6739B7; font-weight: 500; text-align: right;">
+                                        📁 {transaction['folder']}
+                                    </td>
+                                </tr>
+                                {f'<tr><td style="padding: 8px 0; color: #555; font-size: 14px;">Note</td><td style="padding: 8px 0; color: #333; text-align: right;">{note}</td></tr>' if note else ''}
+                            </table>
+                        </div>
+                        
+                        <div style="background-color: #e9f7ef; border-radius: 8px; padding: 12px; text-align: center;">
+                            <p style="margin: 0; color: #28a745; font-weight: 500;">
+                                Transaction completed successfully!
+                            </p>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Add "Done" button to close the payment screen
+                    col1, col2, col3 = st.columns([1,2,1])
+                    with col2:
+                        if st.button("✓ Done", use_container_width=True, key="done_btn"):
+                            st.session_state.qr_scanned = False 
+                            st.rerun()
                     
                     if st.session_state.show_folder_options:
                         st.markdown(f"""
@@ -916,6 +1010,23 @@ def show_transaction_history():
                 # Show warning if over limit
                 if limit_info['over_limit']:
                     st.warning(f"⚠️ You have exceeded your spending limit for {selected_folder}! Consider reducing your expenses in this category.")
+                    
+                    # Send SMS notification for exceeded limit if phone number is set
+                    if st.session_state.user_phone:
+                        # Try to send SMS notification via Twilio
+                        sms_result = st.session_state.sms_sender.send_limit_exceeded_notification(
+                            st.session_state.user_phone,
+                            selected_folder,
+                            limit_info['current'],
+                            limit_info['limit']
+                        )
+                        
+                        if sms_result['success']:
+                            st.success("💬 SMS notification sent to your phone.")
+                        elif "not configured" in sms_result['message']:
+                            st.info("💬 SMS notifications available with Twilio configuration.")
+                        else:
+                            st.error(f"Failed to send SMS: {sms_result['message']}")
             else:
                 # Show current spending without limit
                 spending = st.session_state.analytics.get_current_month_spending(selected_folder)
@@ -1291,8 +1402,94 @@ def show_notifications():
         </div>
     """, unsafe_allow_html=True)
     
-    # Get notifications
-    notifications = st.session_state.notification_manager.get_notifications()
+    # Create tabs for notifications and settings
+    tab1, tab2 = st.tabs(["📣 Notifications", "⚙️ SMS Settings"])
+    
+    with tab1:
+        # Get notifications
+        notifications = st.session_state.notification_manager.get_notifications()
+    
+    with tab2:
+        st.markdown("""
+            <div style="background-color: white; padding: 15px; border-radius: 10px; margin: 15px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">SMS Notification Settings</h3>
+                <p style="text-align: center; color: #555;">
+                    Set up your phone number to receive SMS notifications for spending limit alerts and payment confirmations
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Check Twilio configuration
+        twilio_status = st.session_state.sms_sender.is_configured
+        
+        if twilio_status:
+            st.success("✅ Twilio SMS service is properly configured")
+        else:
+            st.warning("⚠️ Twilio SMS service is not configured. Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER to environment variables for SMS functionality.")
+        
+        # Phone number input form
+        st.markdown("<h4>Your Phone Number</h4>", unsafe_allow_html=True)
+        st.markdown("Enter your phone number with country code (e.g., +1234567890) to receive SMS notifications when spending limits are exceeded.")
+        
+        # Show current phone number if set
+        current_phone = st.session_state.user_phone if st.session_state.user_phone else "Not set"
+        st.markdown(f"<p>Current phone number: <strong>{current_phone}</strong></p>", unsafe_allow_html=True)
+        
+        # Get new phone number
+        phone_col1, phone_col2 = st.columns([3, 1])
+        with phone_col1:
+            new_phone = st.text_input("Phone number with country code:", 
+                                      key="phone_input",
+                                      placeholder="+1234567890",
+                                      value=st.session_state.user_phone)
+        
+        with phone_col2:
+            if st.button("Save", use_container_width=True):
+                if new_phone:
+                    # Basic validation - check if starts with + and contains only digits after
+                    if new_phone.startswith("+") and new_phone[1:].isdigit():
+                        st.session_state.user_phone = new_phone
+                        st.success(f"Phone number saved: {new_phone}")
+                        st.info("You will receive SMS notifications when spending limits are exceeded.")
+                        
+                        # Test SMS capability if Twilio is configured
+                        if twilio_status:
+                            if st.button("Test SMS Notification", key="test_sms", use_container_width=True):
+                                test_result = st.session_state.sms_sender.send_limit_exceeded_notification(
+                                    new_phone,
+                                    "Test Folder",
+                                    1500.0,  # Sample spending amount
+                                    1000.0   # Sample limit
+                                )
+                                
+                                if test_result['success']:
+                                    st.success("✅ Test SMS sent successfully! Check your phone.")
+                                else:
+                                    st.error(f"❌ Failed to send test SMS: {test_result['message']}")
+                    else:
+                        st.error("Invalid phone format. Please enter a phone number with country code (e.g., +1234567890)")
+                else:
+                    # Clear phone number if empty input
+                    st.session_state.user_phone = ""
+                    st.info("Phone number cleared. SMS notifications are now disabled.")
+        
+        # Notification preferences
+        st.markdown("<h4>Notification Preferences</h4>", unsafe_allow_html=True)
+        notify_limits = st.checkbox("Spending limits exceeded", value=True, disabled=True)
+        notify_payments = st.checkbox("Payment confirmations", value=True, disabled=True)
+        
+        st.markdown("""
+            <div style="background-color: #f8f8f8; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                <h4 style="color: #6739B7; margin-top: 0;">About SMS Notifications</h4>
+                <p style="margin-bottom: 0; font-size: 14px;">
+                    SMS notifications are sent through Twilio's secure messaging service. Standard message and data rates may apply based on your carrier.
+                    Your phone number is stored only in your current session and is not shared with third parties.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Switch back to the Notifications tab
+    with tab1:
     
     # Mark all as read button
     if not notifications.empty:
