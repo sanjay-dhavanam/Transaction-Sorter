@@ -398,75 +398,83 @@ def main():
     </script>
     """, unsafe_allow_html=True)
     
-    # Initialize tab navigation in session state if not present
-    if 'tab_index' not in st.session_state:
-        st.session_state.tab_index = 0
+    # Create a container for the navigation buttons
+    st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     
-    # Create button-based navigation that looks like PhonePe's bottom nav bar
+    # Use regular Streamlit buttons for navigation - at the bottom like PhonePe
+    col1, col2, col3, col4 = st.columns(4)
+    
+    # Apply custom styling for navigation buttons to make them look like PhonePe
     st.markdown("""
-    <div style="display: flex; justify-content: space-around; background-color: white; 
-    border-radius: 10px; margin-top: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding: 10px 0;">
-        <div id="nav-scanner" class="nav-item" onclick="document.getElementById('radio-scanner').click()">
-            <div style="font-size: 24px;">📷</div>
-            <div>Scan</div>
-        </div>
-        <div id="nav-history" class="nav-item" onclick="document.getElementById('radio-history').click()">
-            <div style="font-size: 24px;">📋</div>
-            <div>History</div>
-        </div>
-        <div id="nav-notifications" class="nav-item" onclick="document.getElementById('radio-notifications').click()">
-            <div style="font-size: 24px;">🔔</div>
-            <div>Notify</div>
-        </div>
-        <div id="nav-analytics" class="nav-item" onclick="document.getElementById('radio-analytics').click()">
-            <div style="font-size: 24px;">📊</div>
-            <div>Analytics</div>
-        </div>
-    </div>
-    
     <style>
-    .nav-item {
+    /* Move navigation to bottom and style it */
+    .nav-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        padding: 5px 10px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        display: flex;
+        justify-content: space-around;
+    }
+    
+    /* Style the navigation buttons */
+    div[data-testid="column"] > div:has(div.stButton > button[data-testid="baseButton-secondary"]) {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 8px 16px;
-        cursor: pointer;
-        border-radius: 8px;
-        transition: all 0.2s;
-        color: #888;
+        padding: 5px 0;
     }
-    .nav-item:hover {
-        background-color: rgba(103, 57, 183, 0.1);
-        color: #6739B7;
+    
+    /* Make the buttons cleaner */
+    button[data-testid="baseButton-secondary"] {
+        background-color: transparent !important;
+        color: #666 !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 12px !important;
+        padding: 5px 8px !important;
+        font-weight: normal !important;
+        min-height: auto !important;
+        text-align: center !important;
+        white-space: pre-wrap !important;
     }
-    #nav-{st.session_state.current_view} {
-        color: #6739B7;
-        font-weight: bold;
-        background-color: rgba(103, 57, 183, 0.1);
+    
+    /* Highlight active button */
+    .nav-{st.session_state.current_view} button {
+        color: #6739B7 !important;
+        font-weight: bold !important;
+    }
+    
+    /* Add spacing at bottom of page to prevent nav overlapping content */
+    .block-container {
+        padding-bottom: 70px;
     }
     </style>
     """, unsafe_allow_html=True)
     
-    # Create radio buttons hidden from view that control the navigation
-    # This ensures the app properly maintains state between reruns
-    selected_tab = st.radio("Navigation", options=["scanner", "history", "notifications", "analytics"], 
-                           index=st.session_state.tab_index, 
-                           horizontal=True, 
-                           label_visibility="collapsed",
-                           key="navigation")
+    # Create the navigation buttons
+    with col1:
+        if st.button("📷\nScan", key="nav-scanner", use_container_width=True):
+            st.session_state.current_view = "scanner"
+            st.rerun()
+    with col2:
+        if st.button("📋\nHistory", key="nav-history", use_container_width=True):
+            st.session_state.current_view = "history"
+            st.rerun()
+    with col3:
+        if st.button("🔔\nNotify", key="nav-notifications", use_container_width=True):
+            st.session_state.current_view = "notifications"
+            st.rerun()
+    with col4:
+        if st.button("📊\nAnalytics", key="nav-analytics", use_container_width=True):
+            st.session_state.current_view = "analytics"
+            st.rerun()
     
-    # Update the current view based on the selected tab
-    st.session_state.current_view = selected_tab
-    
-    # Update tab_index for consistent tab highlighting
-    if selected_tab == "scanner":
-        st.session_state.tab_index = 0
-    elif selected_tab == "history":
-        st.session_state.tab_index = 1
-    elif selected_tab == "notifications":
-        st.session_state.tab_index = 2
-    elif selected_tab == "analytics":
-        st.session_state.tab_index = 3
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Divider
     st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
