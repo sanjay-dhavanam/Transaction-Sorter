@@ -1,4 +1,5 @@
-folder_name
-Default
-house expenses
-kirana shop
+folder_name,spending_limit
+Default,
+house expenses,
+kirana shop,
+sigaret,500.0

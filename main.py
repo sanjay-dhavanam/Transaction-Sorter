@@ -5,6 +5,7 @@ import plotly.express as px
 from utils.folder_manager import FolderManager
 from utils.transaction_manager import TransactionManager
 from utils.analytics import Analytics
+from utils.notification_manager import NotificationManager
 
 # Initialize session state
 if 'folder_manager' not in st.session_state:
@@ -13,6 +14,8 @@ if 'transaction_manager' not in st.session_state:
     st.session_state.transaction_manager = TransactionManager()
 if 'analytics' not in st.session_state:
     st.session_state.analytics = Analytics()
+if 'notification_manager' not in st.session_state:
+    st.session_state.notification_manager = NotificationManager()
 if 'show_folder_options' not in st.session_state:
     st.session_state.show_folder_options = False
 if 'selected_folder' not in st.session_state:
@@ -144,19 +147,30 @@ def main():
     # Navigation menu
     st.sidebar.title("PhonePe")
     
+    # Get unread notifications count
+    unread_count = st.session_state.notification_manager.get_unread_count()
+    
     # Navigation options
-    nav_options = ["Scan & Pay", "Transaction History"]
+    if unread_count > 0:
+        nav_options = ["Scan & Pay", "Transaction History", f"Notifications 🔔 ({unread_count})"]
+    else:
+        nav_options = ["Scan & Pay", "Transaction History", "Notifications 🔔"]
+        
     selected_option = st.sidebar.radio("Navigation", nav_options)
     
     # Update current view based on selection
     if selected_option == "Scan & Pay":
         st.session_state.current_view = "scanner"
+    elif "Notifications" in selected_option:
+        st.session_state.current_view = "notifications"
     else:
         st.session_state.current_view = "history"
     
     # Show selected interface
     if st.session_state.current_view == "scanner":
         show_scanner_interface()
+    elif st.session_state.current_view == "notifications":
+        show_notifications()
     else:
         show_transaction_history()
 
@@ -362,6 +376,31 @@ def show_scanner_interface():
                     
                     # Save transaction
                     st.session_state.transaction_manager.add_transaction(transaction)
+                    
+                    # Check if this transaction exceeds any spending limit
+                    folder_name = transaction['folder']
+                    if st.session_state.show_folder_options:
+                        # Check folder spending limit
+                        limit_info = st.session_state.analytics.check_folder_limit(
+                            folder_name, 
+                            st.session_state.folder_manager
+                        )
+                        
+                        # If limit is set and exceeded, create a notification
+                        if limit_info['has_limit'] and limit_info['over_limit']:
+                            # Trigger notification
+                            st.session_state.notification_manager.add_limit_exceeded_notification(
+                                folder_name,
+                                limit_info['current'],
+                                limit_info['limit']
+                            )
+                            
+                            # Show warning in UI
+                            st.warning(f"""
+                            ⚠️ SPENDING LIMIT EXCEEDED for folder '{folder_name}'!
+                            You have spent ₹{limit_info['current']:.2f}, which is {limit_info['percentage']:.1f}% of your ₹{limit_info['limit']:.2f} limit.
+                            A notification has been sent to your phone.
+                            """)
                     
                     # Success message with PhonePe style
                     st.markdown("""
@@ -586,6 +625,105 @@ def show_transaction_history():
                                 st.info("No spending limit set (0 = unlimited)")
                         else:
                             st.error("Failed to update spending limit!")
+
+def show_notifications():
+    """Display notifications page with alerts and spending limit messages"""
+    # Page title
+    st.title("Notifications")
+    
+    # PhonePe-like header
+    st.markdown("""
+        <div class="phonepe-header">
+            🔔 Notification Center
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Get notifications
+    notifications = st.session_state.notification_manager.get_notifications()
+    
+    # Mark all as read button
+    if not notifications.empty:
+        if st.button("📖 Mark all as read", key="mark_all_read"):
+            st.session_state.notification_manager.mark_all_as_read()
+            st.success("All notifications marked as read!")
+            st.rerun()
+    
+    # Display notifications
+    if not notifications.empty:
+        # Format the timestamp
+        notifications['formatted_date'] = pd.to_datetime(notifications['timestamp']).dt.strftime('%d %b %Y, %I:%M %p')
+        
+        # Create a container for notifications
+        st.markdown("""
+            <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Your Notifications</h3>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Display individual notifications
+        for i, notification in notifications.iterrows():
+            # Different styling based on notification type
+            if notification['type'] == 'limit_exceeded':
+                icon = "⚠️"
+                color = "#dc3545"  # Red
+                bg_color = "#fff5f5"
+                border = "4px solid #dc3545"
+            else:
+                icon = "ℹ️"
+                color = "#6739B7"  # PhonePe Purple
+                bg_color = "#f9f9f9"
+                border = "4px solid #6739B7"
+            
+            # Read/unread status
+            read_status = "Read" if notification['read'] else "Unread"
+            read_color = "#6c757d" if notification['read'] else "#28a745"
+            
+            with st.container():
+                st.markdown(f"""
+                    <div style="border-left: {border}; padding: 15px; margin: 10px 0; background-color: {bg_color}; border-radius: 5px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h4 style="margin: 0; color: {color};">{icon} {notification['type'].replace('_', ' ').title()}</h4>
+                            <p style="margin: 0; color: {read_color}; font-size: 14px;">{read_status}</p>
+                        </div>
+                        <p style="margin: 10px 0; color: #333; font-size: 16px;">{notification['message']}</p>
+                        <p style="margin: 5px 0 0; color: #666; font-size: 14px;">{notification['formatted_date']}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Mark as read button for unread notifications
+                if not notification['read']:
+                    if st.button("Mark as read", key=f"read_{i}"):
+                        st.session_state.notification_manager.mark_as_read(i)
+                        st.success(f"Notification marked as read!")
+                        st.rerun()
+    else:
+        # No notifications
+        st.markdown("""
+            <div style="background-color: #f8f8f8; padding: 30px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                <h3 style="color: #6739B7; margin-bottom: 10px;">No Notifications</h3>
+                <p>You don't have any notifications at the moment.</p>
+                <p>You'll receive notifications here when you exceed your spending limits.</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    # Simulated phone notification section
+    st.markdown("""
+        <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Phone Notification Settings</h3>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Phone notification settings
+    st.markdown("""
+        <div style="background-color: #f8f8f8; padding: 15px; border-radius: 10px; margin: 15px 0;">
+            <p style="margin: 0 0 10px 0; font-weight: bold;">You'll receive push notifications on your phone when:</p>
+            <ul style="margin: 0; padding-left: 20px;">
+                <li>You exceed your folder spending limits</li>
+                <li>A folder is nearing its spending limit (80% or higher)</li>
+                <li>Your monthly spending patterns change significantly</li>
+            </ul>
+        </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
