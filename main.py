@@ -325,110 +325,91 @@ def main():
     else:
         nav_options = ["Scan & Pay", "Transaction History", "Notifications 🔔", "Spending Analytics 📊"]
     
-    # Improved Mobile App Style Navigation
-    st.markdown("""
-        <div class="nav-bar">
-            <div class="nav-item" id="nav-scan">
-                <div style="font-size: 20px; margin-bottom: 5px;">📷</div>
-                <div>Scan & Pay</div>
-            </div>
-            <div class="nav-item" id="nav-history">
-                <div style="font-size: 20px; margin-bottom: 5px;">📋</div>
-                <div>History</div>
-            </div>
-            <div class="nav-item" id="nav-notif">
-                <div style="font-size: 20px; margin-bottom: 5px;">🔔</div>
-                <div>Notify</div>
-            </div>
-            <div class="nav-item" id="nav-analytics">
-                <div style="font-size: 20px; margin-bottom: 5px;">📊</div>
-                <div>Analytics</div>
-            </div>
-        </div>
-        
-        <script>
-            // This won't run in Streamlit, but shows the intention
-            document.getElementById("nav-scan").addEventListener("click", function() {
-                // Navigate to Scan & Pay
-            });
-        </script>
-    """, unsafe_allow_html=True)
-    
-    # Make navigation buttons visible and centered
+    # Create a cleaner, simpler and functional navigation with tabs
     st.markdown("""
         <style>
-        /* Style navigation buttons to match the design */
-        [data-testid="stHorizontalBlock"] [data-testid="baseButton-secondary"] {
+        /* Style tab buttons to look like PhonePe navigation */
+        div.stTabs button {
             background-color: transparent;
             color: #6739B7;
-            min-height: 40px;
-            font-size: 24px;
-            padding: 10px 0;
-            margin: 0;
-            box-shadow: none;
             border: none;
-            text-align: center;
+            margin: 0;
+            padding: 10px 5px;
+            font-size: 12px;
+            font-weight: normal;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        [data-testid="stHorizontalBlock"] [data-testid="baseButton-secondary"]:hover {
+        div.stTabs button p {
+            font-size: 24px;
+            margin-bottom: 4px;
+            margin-top: 0;
+        }
+        div.stTabs button[aria-selected="true"] {
             background-color: rgba(103, 57, 183, 0.1);
-            box-shadow: none;
+            font-weight: bold;
+        }
+        div.stTabs [role="tablist"] {
+            display: flex;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 5px;
+            margin-bottom: 15px;
+        }
+        div.stTabs [role="tab"] {
+            width: 100%;
+            border-radius: 10px;
+        }
+        div.stTabs [role="tabpanel"] {
+            padding: 0;
+        }
+        .stTabs {
+            background-color: transparent;
         }
         </style>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3, col4 = st.columns(4)
+    # Create tabs with icons
+    scan_tab = "📷\nScan & Pay"
+    history_tab = "📋\nHistory"
+    notifications_tab = "🔔\nNotify"
+    analytics_tab = "📊\nAnalytics"
     
-    with col1:
-        scan_btn = st.button("📷", key="nav_scan", use_container_width=True)
-        if scan_btn:
+    # Create the actual tabs
+    tabs = st.tabs([scan_tab, history_tab, notifications_tab, analytics_tab])
+    
+    # Get the selected tab and use it to determine which page to show
+    # For tabs, we need to handle the selection manually 
+    selected_tab_index = 0  # Default to first tab (Scan & Pay)
+    
+    # Check which tab is clicked - we'll manually track this
+    with tabs[0]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "scanner":
             st.session_state.current_view = "scanner"
-            st.rerun()
-        st.markdown("<div style='text-align:center; font-size:12px;'>Scan & Pay</div>", unsafe_allow_html=True)
             
-    with col2:
-        history_btn = st.button("📋", key="nav_history", use_container_width=True)
-        if history_btn:
+    with tabs[1]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "history":
             st.session_state.current_view = "history"
-            st.rerun()
-        st.markdown("<div style='text-align:center; font-size:12px;'>History</div>", unsafe_allow_html=True)
             
-    with col3:
-        notif_btn = st.button("🔔", key="nav_notif", use_container_width=True)
-        if notif_btn:
+    with tabs[2]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "notifications":
             st.session_state.current_view = "notifications"
-            st.rerun()
-        st.markdown("<div style='text-align:center; font-size:12px;'>Notify</div>", unsafe_allow_html=True)
             
-    with col4:
-        analytics_btn = st.button("📊", key="nav_analytics", use_container_width=True)
-        if analytics_btn:
+    with tabs[3]:
+        # If this tab is active, update the current view
+        if not st.session_state.current_view == "analytics":
             st.session_state.current_view = "analytics"
-            st.rerun()
-        st.markdown("<div style='text-align:center; font-size:12px;'>Analytics</div>", unsafe_allow_html=True)
+    
+    # We don't need this section anymore as we're directly updating the current_view
+    # in each tab's context above
     
     # Divider
     st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
-    
-    # Keep a hidden navigation for accessibility
-    st.sidebar.markdown("""
-        <style>
-            [data-testid="stSidebar"] [data-testid="stRadio"] {
-                position: absolute;
-                top: -1000px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-    selected_option = st.sidebar.radio("Navigation", nav_options)
-    
-    # Update current view based on selection
-    if selected_option == "Scan & Pay":
-        st.session_state.current_view = "scanner"
-    elif "Notifications" in selected_option:
-        st.session_state.current_view = "notifications"
-    elif "Spending Analytics" in selected_option:
-        st.session_state.current_view = "analytics"
-    else:
-        st.session_state.current_view = "history"
     
     # Show selected interface
     if st.session_state.current_view == "scanner":
