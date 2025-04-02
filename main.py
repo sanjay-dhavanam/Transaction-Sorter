@@ -446,46 +446,75 @@ def show_scanner_interface():
         
         # Camera viewfinder with QR frame
         if not st.session_state.qr_scanned:
-            # Add scanning animation style to the head
             st.markdown("""
-                <style>
-                    @keyframes scanline {
-                        0% { transform: translateY(0); opacity: 0.8; }
-                        50% { opacity: 1; }
-                        100% { transform: translateY(300px); opacity: 0.8; }
-                    }
-                </style>
-            """, unsafe_allow_html=True)
-            
-            # Scanner overlay with frame
-            st.markdown("""
-                <div style="position: relative; background-color: rgba(0, 0, 0, 0.9); padding: 30px; 
-                      border-radius: 15px; text-align: center; height: 300px; display: flex; 
-                      flex-direction: column; justify-content: center; align-items: center; margin-bottom: 20px;">
+                <div class="scanner-overlay">
+                    <!-- Animated scanner line effect -->
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, #6739B7, transparent); animation: scan 1.5s linear infinite; z-index: 10;"></div>
                     
-                    <!-- Scanner line animation -->
-                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; 
-                         background: linear-gradient(to right, transparent, #6739B7, transparent); 
-                         animation: scanline 1.5s linear infinite; z-index: 10;"></div>
-                    
-                    <!-- Scanner frame -->
-                    <div style="border: 2px solid #6739B7; border-radius: 10px; padding: 5px;
-                         width: 80%; height: 60%; margin: 0 auto; display: flex;
-                         justify-content: center; align-items: center;">
+                    <div class="scanner-frame" style="position: relative; border: 2px solid rgba(103,57,183,0.8); box-shadow: 0 0 10px rgba(103,57,183,0.5);">
                         <p style='color: #6739B7; font-weight: 500;'>Position QR code in frame</p>
                     </div>
                     
-                    <p style='color: #e0e0e0; margin-top: 15px; font-size: 14px;'>
-                        Camera active - waiting for QR code...
-                    </p>
+                    <p style='color: #e0e0e0; margin-top: 15px; font-size: 14px;'>Camera active - waiting for QR code...</p>
                     
-                    <!-- Folder toggle button -->
-                    <div style="position: absolute; bottom: 20px; right: 20px; background-color: rgba(103, 57, 183, 0.8);
-                         color: white; border-radius: 50%; width: 40px; height: 40px; display: flex;
-                         justify-content: center; align-items: center; cursor: pointer; font-size: 18px;">
-                        📁
-                    </div>
+                    <!-- Visual scanner elements -->
+                    <div style="position: absolute; top: 10px; left: 10px; width: 30px; height: 30px; border-top: 2px solid #6739B7; border-left: 2px solid #6739B7; border-radius: 5px 0 0 0;"></div>
+                    <div style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-top: 2px solid #6739B7; border-right: 2px solid #6739B7; border-radius: 0 5px 0 0;"></div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; width: 30px; height: 30px; border-bottom: 2px solid #6739B7; border-left: 2px solid #6739B7; border-radius: 0 0 0 5px;"></div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px; border-bottom: 2px solid #6739B7; border-right: 2px solid #6739B7; border-radius: 0 0 5px 0;"></div>
+                    
+                    <div class="folder-toggle" style="box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.2s;">📁</div>
                 </div>
+                
+                <style>
+                    @keyframes scan {
+                        0% { transform: translateY(0); opacity: 0.8; }
+                        50% { opacity: 1; }
+                        100% { transform: translateY(320px); opacity: 0.8; }
+                    }
+                    
+                    .scanner-overlay {
+                        position: relative;
+                        background-color: rgba(0, 0, 0, 0.9);
+                        padding: 30px;
+                        border-radius: 15px;
+                        text-align: center;
+                        height: 320px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .scanner-frame {
+                        border: 2px solid #6739B7;
+                        border-radius: 10px;
+                        padding: 5px;
+                        width: 80%;
+                        height: 60%;
+                        margin: 0 auto;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    
+                    .folder-toggle {
+                        position: absolute;
+                        bottom: 20px;
+                        right: 20px;
+                        background-color: rgba(103, 57, 183, 0.8);
+                        color: white;
+                        border-radius: 50%;
+                        width: 40px;
+                        height: 40px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        cursor: pointer;
+                        font-size: 18px;
+                    }
+                </style>
             """, unsafe_allow_html=True)
             
             # Add a scan button to simulate QR scanning
