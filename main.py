@@ -58,79 +58,190 @@ def main():
             font-family: 'Roboto', sans-serif;
             max-width: 100%;
             overflow-x: hidden;
+            background-color: #fafafa !important;
+        }
+        
+        .main .block-container {
+            padding-top: 10px;
+            max-width: 95%;
         }
         
         /* Button Styling */
-        .stButton button {
+        .stButton > button {
             background-color: #6739B7;
             color: white;
-            border-radius: 20px;
+            border-radius: 25px;
             border: none;
-            padding: 10px 20px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(103,57,183,0.3);
+            padding: 12px 20px;
+            font-weight: 500;
+            box-shadow: 0 4px 8px rgba(103,57,183,0.2);
             transition: all 0.2s ease;
+            text-transform: none;
+            letter-spacing: 0.5px;
         }
         
-        .stButton button:hover {
+        .stButton > button:hover {
             background-color: #5c33a4;
-            box-shadow: 0 4px 8px rgba(103,57,183,0.4);
+            box-shadow: 0 6px 12px rgba(103,57,183,0.3);
+            transform: translateY(-1px);
+        }
+        
+        .stButton > button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(103,57,183,0.2);
         }
         
         /* Mobile Container */
         .mobile-container {
             max-width: 480px;
             margin: 0 auto;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #eaeaea;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             overflow: hidden;
-            background-color: #f9f9f9;
+            background-color: white;
             position: relative;
         }
         
         /* Headers */
         .phonepe-header {
-            background-color: #6739B7;
+            background: linear-gradient(135deg, #6739B7 0%, #8157c9 100%);
             color: white;
             padding: 15px 0;
             text-align: center;
             border-radius: 10px 10px 0 0;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 18px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .phonepe-header::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
         }
         
         /* Scanner UI */
         .scanner-overlay {
             position: relative;
-            background-color: rgba(0, 0, 0, 0.9);
+            background: linear-gradient(to bottom, #000000, #333333);
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 15px;
             text-align: center;
-            height: 300px;
+            height: 320px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             margin-bottom: 20px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .scanner-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
         }
         
         /* Mobile Status Bar */
         .status-bar {
-            background-color: #6739B7;
+            background: linear-gradient(to right, #5c33a4, #6739B7);
             color: white;
-            padding: 5px 15px;
+            padding: 8px 15px;
             font-size: 12px;
             display: flex;
             justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            background-color: white;
+            padding: 10px 0;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: #444;
+        }
+        
+        .nav-item.active {
+            color: #6739B7;
+            font-weight: bold;
+        }
+        
+        /* Card Styling */
+        .phonepe-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f0f0f0;
+        }
+        
+        /* Input Fields */
+        .stTextInput > div > div > input {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 10px 15px;
+            transition: all 0.2s;
+        }
+        
+        .stTextInput > div > div > input:focus {
+            border-color: #6739B7;
+            box-shadow: 0 0 0 2px rgba(103,57,183,0.2);
         }
         
         /* Icon Styling */
         .folder-icon {
             font-size: 24px;
             color: #6739B7;
+        }
+        
+        /* Hide Streamlit Branding */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #6739B7;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5c33a4;
         }
         .scanner-frame {
             border: 2px solid #6739B7;
@@ -214,39 +325,88 @@ def main():
     else:
         nav_options = ["Scan & Pay", "Transaction History", "Notifications 🔔", "Spending Analytics 📊"]
     
-    # Mobile App Style Navigation with icons
+    # Improved Mobile App Style Navigation
+    st.markdown("""
+        <div class="nav-bar">
+            <div class="nav-item" id="nav-scan">
+                <div style="font-size: 20px; margin-bottom: 5px;">📷</div>
+                <div>Scan & Pay</div>
+            </div>
+            <div class="nav-item" id="nav-history">
+                <div style="font-size: 20px; margin-bottom: 5px;">📋</div>
+                <div>History</div>
+            </div>
+            <div class="nav-item" id="nav-notif">
+                <div style="font-size: 20px; margin-bottom: 5px;">🔔</div>
+                <div>Notify</div>
+            </div>
+            <div class="nav-item" id="nav-analytics">
+                <div style="font-size: 20px; margin-bottom: 5px;">📊</div>
+                <div>Analytics</div>
+            </div>
+        </div>
+        
+        <script>
+            // This won't run in Streamlit, but shows the intention
+            document.getElementById("nav-scan").addEventListener("click", function() {
+                // Navigate to Scan & Pay
+            });
+        </script>
+    """, unsafe_allow_html=True)
+    
+    # Functional navigation buttons (hidden with CSS instead of label_visibility)
+    st.markdown("""
+        <style>
+        /* Hide the navigation buttons text but keep them functional */
+        [data-testid="stHorizontalBlock"] [data-testid="baseButton-secondary"] {
+            color: transparent;
+            min-height: 10px;
+            height: 10px;
+            padding: 0;
+            margin: 0;
+            opacity: 0;
+            position: absolute;
+            top: -50px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        scan_btn = st.button("📷\nScan & Pay", key="nav_scan", use_container_width=True)
+        scan_btn = st.button("", key="nav_scan", use_container_width=True)
         if scan_btn:
             st.session_state.current_view = "scanner"
             st.rerun()
             
     with col2:
-        history_btn = st.button("📋\nHistory", key="nav_history", use_container_width=True)
+        history_btn = st.button("", key="nav_history", use_container_width=True)
         if history_btn:
             st.session_state.current_view = "history"
             st.rerun()
             
     with col3:
-        notif_label = f"🔔\n({unread_count})" if unread_count > 0 else "🔔\nNotify"
-        notif_btn = st.button(notif_label, key="nav_notif", use_container_width=True)
+        notif_btn = st.button("", key="nav_notif", use_container_width=True)
         if notif_btn:
             st.session_state.current_view = "notifications"
             st.rerun()
             
     with col4:
-        analytics_btn = st.button("📊\nAnalytics", key="nav_analytics", use_container_width=True)
-        if analytics_btn:
-            st.session_state.current_view = "analytics"
-            st.rerun()
+        analytics_btn = st.button("", key="nav_analytics", use_container_width=True)
     
     # Divider
     st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
     
     # Keep a hidden navigation for accessibility
-    selected_option = st.sidebar.radio("Navigation", nav_options, label_visibility="collapsed")
+    st.sidebar.markdown("""
+        <style>
+            [data-testid="stSidebar"] [data-testid="stRadio"] {
+                position: absolute;
+                top: -1000px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    selected_option = st.sidebar.radio("Navigation", nav_options)
     
     # Update current view based on selection
     if selected_option == "Scan & Pay":
@@ -288,16 +448,35 @@ def show_scanner_interface():
         if not st.session_state.qr_scanned:
             st.markdown("""
                 <div class="scanner-overlay">
-                    <div class="scanner-frame">
-                        <p style='color: #6739B7;'>Position QR code in frame</p>
+                    <!-- Animated scanner line effect -->
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, #6739B7, transparent); animation: scan 1.5s linear infinite; z-index: 10;"></div>
+                    
+                    <div class="scanner-frame" style="position: relative; border: 2px solid rgba(103,57,183,0.8); box-shadow: 0 0 10px rgba(103,57,183,0.5);">
+                        <p style='color: #6739B7; font-weight: 500;'>Position QR code in frame</p>
                     </div>
-                    <p style='color: white; margin-top: 15px;'>Waiting for QR code...</p>
-                    <div class="folder-toggle">📁</div>
+                    
+                    <p style='color: #e0e0e0; margin-top: 15px; font-size: 14px;'>Camera active - waiting for QR code...</p>
+                    
+                    <!-- Visual scanner elements -->
+                    <div style="position: absolute; top: 10px; left: 10px; width: 30px; height: 30px; border-top: 2px solid #6739B7; border-left: 2px solid #6739B7; border-radius: 5px 0 0 0;"></div>
+                    <div style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-top: 2px solid #6739B7; border-right: 2px solid #6739B7; border-radius: 0 5px 0 0;"></div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; width: 30px; height: 30px; border-bottom: 2px solid #6739B7; border-left: 2px solid #6739B7; border-radius: 0 0 0 5px;"></div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px; border-bottom: 2px solid #6739B7; border-right: 2px solid #6739B7; border-radius: 0 0 5px 0;"></div>
+                    
+                    <div class="folder-toggle" style="box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.2s;">📁</div>
                 </div>
+                
+                <style>
+                    @keyframes scan {
+                        0% { transform: translateY(0); opacity: 0.8; }
+                        50% { opacity: 1; }
+                        100% { transform: translateY(320px); opacity: 0.8; }
+                    }
+                </style>
             """, unsafe_allow_html=True)
             
             # Add a scan button to simulate QR scanning
-            scan_col1, scan_col2, scan_col3 = st.columns([1,1,1])
+            scan_col1, scan_col2, scan_col3 = st.columns([1,2,1])
             with scan_col2:
                 if st.button("📷 Scan QR Code", use_container_width=True):
                     # Simulate scanning and get merchant data
@@ -306,20 +485,35 @@ def show_scanner_interface():
                     st.session_state.qr_scanned = True
                     st.rerun()
         else:
-            # Show detected QR result
+            # Show detected QR result with improved styling
             st.markdown(f"""
-                <div style="background-color: #e9e0ff; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
-                    <h3 style="color: #6739B7; margin-bottom: 10px;">✅ QR Code Detected!</h3>
-                    <p style="font-size: 18px; color: #333;">
-                        <strong>Merchant:</strong> {st.session_state.merchant_data['name']}<br>
-                        <strong>UPI ID:</strong> {st.session_state.merchant_data['upi_id']}<br>
-                        <strong>Amount:</strong> ₹{st.session_state.merchant_data['amount']:.2f}
-                    </p>
+                <div style="background: linear-gradient(135deg, #f0ebff 0%, #e9e0ff 100%); 
+                     padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;
+                     box-shadow: 0 3px 10px rgba(103,57,183,0.1); border: 1px solid #d8c8ff;">
+                    <div style="background: rgba(103,57,183,0.1); width: 60px; height: 60px; 
+                         border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                         margin: 0 auto 15px auto;">
+                        <span style="color: #6739B7; font-size: 30px;">✓</span>
+                    </div>
+                    <h3 style="color: #6739B7; margin-bottom: 15px; font-weight: 600;">QR Code Detected</h3>
+                    <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; text-align: left;">
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <div style="width: 30px; color: #6739B7;">👤</div>
+                            <div>
+                                <div style="font-weight: 500;">{st.session_state.merchant_data['name']}</div>
+                                <div style="font-size: 12px; color: #666;">{st.session_state.merchant_data['upi_id']}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <div style="width: 30px; color: #6739B7;">💰</div>
+                            <div style="font-weight: 600; font-size: 18px;">₹{st.session_state.merchant_data['amount']:.2f}</div>
+                        </div>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
             
             # Add a Reset button to scan another QR
-            reset_col1, reset_col2, reset_col3 = st.columns([1,1,1])
+            reset_col1, reset_col2, reset_col3 = st.columns([1,2,1])
             with reset_col2:
                 if st.button("🔄 Scan Another QR", use_container_width=True):
                     st.session_state.qr_scanned = False
@@ -496,14 +690,33 @@ def show_scanner_interface():
                             A notification has been sent to your phone.
                             """)
                     
-                    # Success message with PhonePe style
+                    # Success message with enhanced PhonePe style
                     st.markdown("""
-                        <div style="background-color: #eefff5; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: center; border-left: 4px solid #28a745;">
-                            <h2 style="color: #28a745; margin-bottom: 10px;">🎉 Payment Successful!</h2>
-                            <p style="font-size: 18px;">Your transaction has been completed.</p>
+                        <div style="position: relative; background: linear-gradient(135deg, #e8fff1 0%, #eefff5 100%); 
+                             padding: 25px 20px; border-radius: 12px; margin-top: 20px; text-align: center; 
+                             box-shadow: 0 4px 15px rgba(40,167,69,0.1); overflow: hidden; border: 1px solid #c8e6c9;">
+                            
+                            <!-- Success animation (simulated) -->
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(to right, #28a745, #5cb85c, #28a745);"></div>
+                            
+                            <!-- Success icon with animation effect -->
+                            <div style="width: 70px; height: 70px; border-radius: 50%; background-color: rgba(40,167,69,0.1);
+                                 display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                                <span style="color: #28a745; font-size: 35px;">✓</span>
+                            </div>
+                            
+                            <h2 style="color: #28a745; margin-bottom: 10px; font-weight: 600;">Payment Successful!</h2>
+                            
+                            <div style="background-color: white; border-radius: 8px; padding: 15px; margin: 15px 0; text-align: left; border: 1px solid #e0f2e9;">
+                                <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Transaction ID</div>
+                                <div style="font-size: 16px; font-family: monospace; color: #333; word-break: break-all;">PHONEPE{datetime.now().strftime('%Y%m%d%H%M%S')}</div>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #666; margin-top: 15px;">
+                                A confirmation has been sent to your registered mobile number
+                            </p>
                         </div>
                     """, unsafe_allow_html=True)
-                    st.balloons()
                     
                     if st.session_state.show_folder_options:
                         st.markdown(f"""
