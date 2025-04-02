@@ -6,6 +6,26 @@ class Analytics:
     def __init__(self):
         self.transactions_file = "data/transactions.csv"
     
+    def get_folder_transactions(self, folder=None):
+        """Get all transactions for a specific folder or all folders"""
+        try:
+            transactions = pd.read_csv(self.transactions_file)
+            if transactions.empty:
+                return pd.DataFrame(columns=['folder', 'merchant', 'amount', 'timestamp', 'notes'])
+                
+            # Convert timestamp to datetime
+            transactions['timestamp'] = pd.to_datetime(transactions['timestamp'])
+            
+            # Sort by newest first
+            transactions = transactions.sort_values('timestamp', ascending=False)
+            
+            if folder and folder != 'All Folders':
+                return transactions[transactions['folder'] == folder]
+            return transactions
+        except Exception as e:
+            print(f"Error getting folder transactions: {str(e)}")
+            return pd.DataFrame(columns=['folder', 'merchant', 'amount', 'timestamp', 'notes'])
+    
     def generate_analytics(self, date_range):
         """Generate analytics for the given date range"""
         try:

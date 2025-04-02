@@ -25,6 +25,8 @@ if 'merchant_data' not in st.session_state:
         'name': '',
         'amount': 0.0
     }
+if 'current_view' not in st.session_state:
+    st.session_state.current_view = 'scanner'
     
 # Function to simulate QR scan
 def simulate_qr_scan():
@@ -139,7 +141,24 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    show_scanner_interface()
+    # Navigation menu
+    st.sidebar.title("PhonePe")
+    
+    # Navigation options
+    nav_options = ["Scan & Pay", "Transaction History"]
+    selected_option = st.sidebar.radio("Navigation", nav_options)
+    
+    # Update current view based on selection
+    if selected_option == "Scan & Pay":
+        st.session_state.current_view = "scanner"
+    else:
+        st.session_state.current_view = "history"
+    
+    # Show selected interface
+    if st.session_state.current_view == "scanner":
+        show_scanner_interface()
+    else:
+        show_transaction_history()
 
 def show_scanner_interface():
     # Top Bar
@@ -364,6 +383,88 @@ def show_scanner_interface():
                         """, unsafe_allow_html=True)
                 else:
                     st.error("Please enter a valid merchant ID and amount")
+
+def show_transaction_history():
+    """Display transaction history with folder filtering"""
+    # Page title
+    st.title("Transaction History")
+    
+    # PhonePe-like header
+    st.markdown("""
+        <div class="phonepe-header">
+            📁 Folder Transactions
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Get all folders for filter
+    folders = st.session_state.folder_manager.get_folders()
+    if not folders:
+        folders = ['Default']
+        
+    # Add "All Folders" option at the beginning
+    filter_options = ["All Folders"] + folders
+    
+    # Create filter dropdown
+    selected_folder = st.selectbox(
+        "Select a folder to view transactions:", 
+        filter_options,
+        index=0,  # Default to "All Folders"
+    )
+    
+    # Get transactions for the selected folder
+    transactions = st.session_state.analytics.get_folder_transactions(selected_folder)
+    
+    # Display transactions
+    if not transactions.empty:
+        # Format the timestamp for better display
+        transactions['formatted_date'] = transactions['timestamp'].dt.strftime('%d %b %Y, %I:%M %p')
+        
+        # Total amount for the selected folder
+        total_amount = transactions['amount'].sum()
+        
+        # Display the total
+        st.markdown(f"""
+            <div style="background-color: #e9e0ff; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                <h3 style="color: #6739B7; margin: 0;">Total: ₹{total_amount:.2f}</h3>
+                <p style="margin: 5px 0 0 0;">From {len(transactions)} transactions</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Create a container for transactions
+        st.markdown("""
+            <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Transaction Details</h3>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Display individual transactions
+        for i, tx in transactions.iterrows():
+            # Calculate a color based on amount (higher = darker)
+            amount_color = "#6739B7" if tx['amount'] > 1000 else "#8A64C7"
+            
+            with st.container():
+                st.markdown(f"""
+                    <div style="border-left: 4px solid {amount_color}; padding: 15px; margin: 10px 0; background-color: #f9f9f9; border-radius: 5px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h4 style="margin: 0; color: #333;">{tx['merchant']}</h4>
+                            <h3 style="margin: 0; color: {amount_color};">₹{tx['amount']:.2f}</h3>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                            <p style="margin: 0; color: #666; font-size: 14px;">{tx['formatted_date']}</p>
+                            <p style="margin: 0; color: #6739B7; font-weight: bold; font-size: 14px;">📁 {tx['folder']}</p>
+                        </div>
+                        <p style="margin: 5px 0 0; color: #777; font-style: italic;">{tx['notes'] if tx['notes'] else 'No notes'}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+    else:
+        # No transactions found
+        st.markdown("""
+            <div style="background-color: #f8f8f8; padding: 30px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                <h3 style="color: #6739B7; margin-bottom: 10px;">No Transactions Found</h3>
+                <p>There are no transactions in this folder yet.</p>
+                <p>Create a transaction by using the Scan & Pay feature.</p>
+            </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
