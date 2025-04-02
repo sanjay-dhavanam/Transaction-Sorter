@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, date
 import plotly.express as px
 from utils.folder_manager import FolderManager
 from utils.transaction_manager import TransactionManager
@@ -404,67 +404,188 @@ def show_transaction_history():
     # Add "All Folders" option at the beginning
     filter_options = ["All Folders"] + folders
     
-    # Create filter dropdown
-    selected_folder = st.selectbox(
-        "Select a folder to view transactions:", 
-        filter_options,
-        index=0,  # Default to "All Folders"
-    )
+    tab1, tab2 = st.tabs(["📊 Transactions", "⚙️ Spending Limits"])
     
-    # Get transactions for the selected folder
-    transactions = st.session_state.analytics.get_folder_transactions(selected_folder)
+    with tab1:
+        # Create filter dropdown
+        selected_folder = st.selectbox(
+            "Select a folder to view transactions:", 
+            filter_options,
+            index=0,  # Default to "All Folders"
+        )
+        
+        # Show spending limit info if a specific folder is selected
+        if selected_folder != "All Folders":
+            limit_info = st.session_state.analytics.check_folder_limit(
+                selected_folder, 
+                st.session_state.folder_manager
+            )
+            
+            # Display current spending and limit
+            if limit_info['has_limit']:
+                # Calculate progress color based on percentage
+                progress_color = "#28a745"  # Green
+                if limit_info['percentage'] > 80:
+                    progress_color = "#ffc107"  # Yellow
+                if limit_info['percentage'] > 100:
+                    progress_color = "#dc3545"  # Red
+                
+                # Show progress bar and limit details
+                st.markdown(f"""
+                    <div style="background-color: #f8f8f8; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <h4 style="margin-top: 0; color: #6739B7;">Spending Limit: ₹{limit_info['limit']:.2f}</h4>
+                        <p>Current spending: ₹{limit_info['current']:.2f} ({limit_info['period']})</p>
+                        <div style="background-color: #e9e9e9; height: 20px; border-radius: 10px; margin: 10px 0;">
+                            <div style="background-color: {progress_color}; width: {min(100, limit_info['percentage'])}%; height: 20px; border-radius: 10px;">
+                                <p style="text-align: center; color: white; padding-top: 1px; font-size: 14px;">{limit_info['percentage']:.1f}%</p>
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                # Show warning if over limit
+                if limit_info['over_limit']:
+                    st.warning(f"⚠️ You have exceeded your spending limit for {selected_folder}! Consider reducing your expenses in this category.")
+            else:
+                # Show current spending without limit
+                spending = st.session_state.analytics.get_current_month_spending(selected_folder)
+                st.markdown(f"""
+                    <div style="background-color: #f8f8f8; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <p style="margin: 0;">Current spending: ₹{spending['amount']:.2f} ({spending['period']})</p>
+                        <p style="margin: 5px 0 0; color: #6c757d;">No spending limit set. Set a limit in the Spending Limits tab.</p>
+                    </div>
+                """, unsafe_allow_html=True)
+        
+        # Get transactions for the selected folder
+        transactions = st.session_state.analytics.get_folder_transactions(selected_folder)
+        
+        # Display transactions
+        if not transactions.empty:
+            # Format the timestamp for better display
+            transactions['formatted_date'] = transactions['timestamp'].dt.strftime('%d %b %Y, %I:%M %p')
+            
+            # Total amount for the selected folder
+            total_amount = transactions['amount'].sum()
+            
+            # Display the total
+            st.markdown(f"""
+                <div style="background-color: #e9e0ff; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                    <h3 style="color: #6739B7; margin: 0;">Total: ₹{total_amount:.2f}</h3>
+                    <p style="margin: 5px 0 0 0;">From {len(transactions)} transactions</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Create a container for transactions
+            st.markdown("""
+                <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Transaction Details</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Display individual transactions
+            for i, tx in transactions.iterrows():
+                # Calculate a color based on amount (higher = darker)
+                amount_color = "#6739B7" if tx['amount'] > 1000 else "#8A64C7"
+                
+                with st.container():
+                    st.markdown(f"""
+                        <div style="border-left: 4px solid {amount_color}; padding: 15px; margin: 10px 0; background-color: #f9f9f9; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; color: #333;">{tx['merchant']}</h4>
+                                <h3 style="margin: 0; color: {amount_color};">₹{tx['amount']:.2f}</h3>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                <p style="margin: 0; color: #666; font-size: 14px;">{tx['formatted_date']}</p>
+                                <p style="margin: 0; color: #6739B7; font-weight: bold; font-size: 14px;">📁 {tx['folder']}</p>
+                            </div>
+                            <p style="margin: 5px 0 0; color: #777; font-style: italic;">{tx['notes'] if tx['notes'] else 'No notes'}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+        else:
+            # No transactions found
+            st.markdown("""
+                <div style="background-color: #f8f8f8; padding: 30px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                    <h3 style="color: #6739B7; margin-bottom: 10px;">No Transactions Found</h3>
+                    <p>There are no transactions in this folder yet.</p>
+                    <p>Create a transaction by using the Scan & Pay feature.</p>
+                </div>
+            """, unsafe_allow_html=True)
     
-    # Display transactions
-    if not transactions.empty:
-        # Format the timestamp for better display
-        transactions['formatted_date'] = transactions['timestamp'].dt.strftime('%d %b %Y, %I:%M %p')
-        
-        # Total amount for the selected folder
-        total_amount = transactions['amount'].sum()
-        
-        # Display the total
-        st.markdown(f"""
-            <div style="background-color: #e9e0ff; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
-                <h3 style="color: #6739B7; margin: 0;">Total: ₹{total_amount:.2f}</h3>
-                <p style="margin: 5px 0 0 0;">From {len(transactions)} transactions</p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Create a container for transactions
+    # Spending Limits Tab
+    with tab2:
         st.markdown("""
             <div style="background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Transaction Details</h3>
+                <h3 style="color: #6739B7; margin-bottom: 15px; text-align: center;">Folder Spending Limits</h3>
+                <p style="text-align: center; color: #555;">Set monthly spending limits for each folder to manage your expenses</p>
             </div>
         """, unsafe_allow_html=True)
         
-        # Display individual transactions
-        for i, tx in transactions.iterrows():
-            # Calculate a color based on amount (higher = darker)
-            amount_color = "#6739B7" if tx['amount'] > 1000 else "#8A64C7"
+        # Display folder details and allow setting limits
+        folder_details = st.session_state.folder_manager.get_folder_details()
+        
+        # Current month info
+        today = date.today()
+        current_month = today.strftime('%B %Y')
+        
+        st.markdown(f"""
+            <div style="background-color: #e9e0ff; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: center;">
+                <p style="margin: 0; color: #6739B7; font-weight: bold;">Current Period: {current_month}</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # For each folder, show current limit and spending + input to update
+        for index, folder in folder_details.iterrows():
+            folder_name = folder['folder_name']
+            
+            # Get current limit and spending
+            limit = folder['spending_limit'] if 'spending_limit' in folder else 0.0
+            spending_info = st.session_state.analytics.check_folder_limit(folder_name, st.session_state.folder_manager)
             
             with st.container():
                 st.markdown(f"""
-                    <div style="border-left: 4px solid {amount_color}; padding: 15px; margin: 10px 0; background-color: #f9f9f9; border-radius: 5px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4 style="margin: 0; color: #333;">{tx['merchant']}</h4>
-                            <h3 style="margin: 0; color: {amount_color};">₹{tx['amount']:.2f}</h3>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                            <p style="margin: 0; color: #666; font-size: 14px;">{tx['formatted_date']}</p>
-                            <p style="margin: 0; color: #6739B7; font-weight: bold; font-size: 14px;">📁 {tx['folder']}</p>
-                        </div>
-                        <p style="margin: 5px 0 0; color: #777; font-style: italic;">{tx['notes'] if tx['notes'] else 'No notes'}</p>
+                    <div style="padding: 10px; margin: 15px 0 5px 0; background-color: #f8f8f8; border-radius: 5px;">
+                        <h4 style="margin: 0; color: #6739B7;">📁 {folder_name}</h4>
                     </div>
                 """, unsafe_allow_html=True)
-    else:
-        # No transactions found
-        st.markdown("""
-            <div style="background-color: #f8f8f8; padding: 30px; border-radius: 10px; text-align: center; margin-top: 20px;">
-                <h3 style="color: #6739B7; margin-bottom: 10px;">No Transactions Found</h3>
-                <p>There are no transactions in this folder yet.</p>
-                <p>Create a transaction by using the Scan & Pay feature.</p>
-            </div>
-        """, unsafe_allow_html=True)
+                
+                col1, col2 = st.columns([3, 2])
+                
+                # Current spending for this folder
+                current_spending = spending_info['current'] if spending_info['has_limit'] else st.session_state.analytics.get_current_month_spending(folder_name)['amount']
+                
+                with col1:
+                    st.markdown(f"Current spending: ₹{current_spending:.2f}")
+                    if spending_info['has_limit']:
+                        progress_color = "#28a745"  # Green
+                        if spending_info['percentage'] > 80:
+                            progress_color = "#ffc107"  # Yellow
+                        if spending_info['percentage'] > 100:
+                            progress_color = "#dc3545"  # Red
+                            
+                        st.progress(min(1.0, spending_info['percentage']/100))
+                        st.markdown(f"<p style='color: {progress_color}; font-size: 14px;'>{spending_info['percentage']:.1f}% of limit</p>", unsafe_allow_html=True)
+                
+                with col2:
+                    # Set new limit
+                    new_limit = st.number_input(
+                        f"Set limit for {folder_name}:",
+                        min_value=0.0,
+                        value=float(limit),
+                        step=100.0,
+                        format="%.2f",
+                        key=f"limit_{folder_name}"
+                    )
+                    
+                    if st.button(f"Update Limit", key=f"update_{folder_name}"):
+                        success = st.session_state.folder_manager.set_spending_limit(folder_name, new_limit)
+                        if success:
+                            st.success(f"Spending limit updated for {folder_name}!")
+                            if new_limit > 0:
+                                st.info(f"You will be notified when spending exceeds ₹{new_limit:.2f}")
+                            else:
+                                st.info("No spending limit set (0 = unlimited)")
+                        else:
+                            st.error("Failed to update spending limit!")
 
 if __name__ == "__main__":
     main()
